@@ -1,0 +1,19 @@
+{
+  "name": "lgbt-telegram-bot",
+  "version": "1.0.0",
+  "description": "A bot to be used on the Telegram group for the Wikiproyecto LGBT+",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nacaru-w/wplgbt-telegram-bot.git"
+  },
+  "author": "Nacaru",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/nacaru-w/wplgbt-telegram-bot/issues"
+  },
+  "homepage": "https://github.com/nacaru-w/wplgbt-telegram-bot#readme"
+}
