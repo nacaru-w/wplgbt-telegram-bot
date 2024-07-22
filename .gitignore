@@ -132,3 +132,6 @@ dist
 # Secret files that are not to be shared
 config.ts
 config.json
+
+# ID data file
+idData.json
