@@ -1,3 +1,4 @@
+import { LGBTDaysDictionary } from './lgbt-days/lgbt-days';
 import TelegramBot from 'node-telegram-bot-api';
 import fs from 'fs';
 import cron from 'node-cron';
@@ -32,15 +33,24 @@ function saveData(data: { group: string, chatId: number }): void {
 
 function broadcastMessage(message: string) {
     chatDictionary.forEach((chat) => {
-        // Moreformatting options for messages at https://core.telegram.org/bots/api#sendmessage
-        bot.sendMessage(chat.chatId, message, { 'parse_mode': 'Markdown' });
+        // More formatting options for messages at https://core.telegram.org/bots/api#sendmessage
+        bot.sendMessage(chat.chatId, message, { 'parse_mode': 'Markdown', 'disable_web_page_preview': true });
     })
 }
 
 const scheduleMessages = () => {
-    cron.schedule('*/2 * * * *', () => {
-        broadcastMessage('Prueba de uso de [Cron](https://github.com/node-cron/node-cron) y de parseo de mensajes\n[Estas palabras](https://wmlgbt-es-web.toolforge.org/ deberían de contener un enlace a la página web del WikiProyecto LGBT+');
-    });
+    console.log('⏰ Running scheduled messages...')
+    for (let day in LGBTDaysDictionary) {
+        const event = LGBTDaysDictionary[day];
+        event.days.forEach((dayOfMonth: number) => {
+            const cronExpression = `52 0 ${dayOfMonth.toString()} ${event.month.toString()} *`; // At 16:00 on the specified day and month
+            cron.schedule(cronExpression, () => {
+                const message = `__¡Hoy es el ${day}!__ 🌈\n[Más información en su artículo de Wikipedia](https://es.wikipedia.org/wiki/${encodeURIComponent(day)})!`
+                broadcastMessage(message);
+                console.log('✅ Scheduled message sent:', message)
+            })
+        })
+    }
 
 }
 
