@@ -43,8 +43,8 @@ function getPronounsDay(): number[] {
 export const LGBTDaysDictionary: LGBTDays = {
     'Día Internacional de la Visibilidad Trans': {
         keyword: 'trans',
-        month: 3,
-        days: [31]
+        month: 7,
+        days: [25]
     },
     'Día de la Visibilidad Lésbica': {
         keyword: 'lesbian',

@@ -43,9 +43,9 @@ const scheduleMessages = () => {
     for (let day in LGBTDaysDictionary) {
         const event = LGBTDaysDictionary[day];
         event.days.forEach((dayOfMonth: number) => {
-            const cronExpression = `52 0 ${dayOfMonth.toString()} ${event.month.toString()} *`; // At 16:00 on the specified day and month
+            const cronExpression = `0 22 ${dayOfMonth.toString()} ${event.month.toString()} *`; // At 16:00 on the specified day and month
             cron.schedule(cronExpression, () => {
-                const message = `__¡Hoy es el ${day}!__ 🌈\n[Más información en su artículo de Wikipedia](https://es.wikipedia.org/wiki/${encodeURIComponent(day)})!`
+                const message = `🌈¡Hoy es el ${day}!🌈\n[Más información en su artículo de Wikipedia](https://es.wikipedia.org/wiki/${encodeURIComponent(day)})!`
                 broadcastMessage(message);
                 console.log('✅ Scheduled message sent:', message)
             })
