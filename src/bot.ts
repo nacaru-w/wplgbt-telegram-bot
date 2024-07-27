@@ -69,7 +69,7 @@ const scheduleMessages = () => {
         event.days.forEach((dayOfMonth: number) => {
             const cronExpression = `0 14 ${dayOfMonth.toString()} ${event.month.toString()} *`; // At 16:00 on the specified day and month
             cron.schedule(cronExpression, () => {
-                const message = `🌈¡Hoy es el ${day}!🌈\n[Más información en su artículo de Wikipedia](https://es.wikipedia.org/wiki/${encodeURIComponent(day)})!`
+                const message = `🌈¡Hoy es ${LGBTDaysDictionary[day].days.length > 1 ? 'la' : 'el'} ${day}!🌈\n[Más información en su artículo de Wikipedia](https://es.wikipedia.org/wiki/${encodeURIComponent(day)})!`
                 broadcastMessage(message);
                 console.log('✅ Scheduled message sent:', message)
             })
@@ -113,7 +113,7 @@ bot.on('new_chat_members', (msg) => {
     if (newMembers) {
         if (!newMembers[0].is_bot) {
             const newMember = newMembers[0]
-            console.log(`❗ New member was added to group ${chatTitle}`);
+            console.log(`❗ Greeting new member that was added to group ${chatTitle}`);
             bot.sendMessage(chatId, newMemberMessageBuilder(newMember.first_name || 'usuarie'), { 'parse_mode': 'MarkdownV2', 'disable_web_page_preview': true })
         }
     }
