@@ -41,6 +41,11 @@ function getPronounsDay(): number[] {
 
 
 export const LGBTDaysDictionary: LGBTDays = {
+    'Día Internacional contra la Homofobia en el Deporte': {
+        keyword: 'lgbt',
+        month: 2,
+        days: [19]
+    },
     'Día Internacional de la Visibilidad Trans': {
         keyword: 'trans',
         month: 3,
@@ -66,6 +71,16 @@ export const LGBTDaysDictionary: LGBTDays = {
         month: 5,
         days: [19]
     },
+    'Día de la Pansexualidad': {
+        keyword: 'pan',
+        month: 5,
+        days: [24]
+    },
+    'Día Internacional del Orgullo LGBT': {
+        keyword: 'lgbt',
+        month: 6,
+        days: [28]
+    },
     'Día Internacional de las Personas No Binarias': {
         keyword: 'nb',
         month: 7,
@@ -81,6 +96,16 @@ export const LGBTDaysDictionary: LGBTDays = {
         month: 10,
         days: [8]
     },
+    'Día para salir del armario': {
+        keyword: 'lgbt',
+        month: 10,
+        days: [11]
+    },
+    'Día de las Rebeldías Lésbicas': {
+        keyword: 'lesbian',
+        month: 10,
+        days: [13]
+    },
     'Día Internacional de los Pronombres': {
         keyword: 'nb',
         month: 10,
@@ -90,6 +115,11 @@ export const LGBTDaysDictionary: LGBTDays = {
         keyword: 'intersex',
         month: 10,
         days: [26]
+    },
+    'Día de las personas LGBT en la Ciencia': {
+        keyword: 'lgbt',
+        month: 11,
+        days: [18]
     },
     'Semana de la Concienciación Transgénero': {
         keyword: 'trans',
