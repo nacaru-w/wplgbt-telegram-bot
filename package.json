@@ -6,7 +6,7 @@
   "scripts": {
     "test": "test",
     "compile": "rm -rf dist && tsc",
-    "start": "npm run compile && node dist/bot.js",
+    "start": "node dist/bot.js",
     "bot": "node dist/bot.js"
   },
   "repository": {
