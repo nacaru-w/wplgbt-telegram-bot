@@ -6,7 +6,8 @@ export const startMessage = String.raw
 ¡Este es el bot del WikiProyecto LGBT\+\!
 · Usa /help para conocer las opciones de ayuda\.
 · Añádeme a un grupo para que automáticamente avise de los días LGBT\+
-¡Nos vemos\!
+· También saludaré a la gente nueva
+¡Nos vemos 🤖\!
 `;
 
 export const helpMessage = String.raw
