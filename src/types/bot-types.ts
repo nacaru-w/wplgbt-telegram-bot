@@ -1,3 +1,17 @@
+export type Mes =
+    | 'Enero'
+    | 'Febrero'
+    | 'Marzo'
+    | 'Abril'
+    | 'Mayo'
+    | 'Junio'
+    | 'Julio'
+    | 'Agosto'
+    | 'Septiembre'
+    | 'Octubre'
+    | 'Noviembre'
+    | 'Diciembre';
+
 export interface LGBTDays {
     [name: string]: {
         keyword:
@@ -17,4 +31,9 @@ export interface LGBTDays {
         month: number,
         days: number[]
     }
+}
+
+export interface EventoDelMesInfo {
+    event: string | null;
+    month: Mes | null;
 }
