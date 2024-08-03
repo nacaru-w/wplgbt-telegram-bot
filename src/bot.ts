@@ -1,9 +1,13 @@
 // Bot uses node-telegram-bot-api, docs at: https://github.com/yagop/node-telegram-bot-api/blob/master/doc/api.md
+// Bot messages are written in MarkdownV2 style, check https://core.telegram.org/bots/api#markdownv2-style
 
 import { LGBTDaysDictionary } from './lgbt-days/lgbt-days';
 import TelegramBot from 'node-telegram-bot-api';
 import fs from 'fs';
 import cron from 'node-cron';
+import { getCurrentEventoDelMesInfo } from './services/mediawiki-service';
+import { EventoDelMesInfo } from './types/bot-types';
+import { currentYear, currentMonth, getCountryOnISO } from './utils/utils';
 
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const token = config.token;
@@ -30,6 +34,29 @@ function newMemberMessageBuilder(newMember: string): string {
 · Para asegurarnos de que el grupo es un espacio seguro para las personas que lo integran, evita enviar o difundir los temas de conversación que se hablen aquí\.
 · Ten en cuenta que este grupo sigue la [política de espacios amigables](https://meta.wikimedia.org/wiki/Friendly_space_policies/es) y el [Código Universal de Conducta](https://meta.wikimedia.org/wiki/Universal_Code_of_Conduct/es)\.
 ¡Espero que disfrutes de tu paso por aquí\! ¡Nos vemos 🤖\! 
+`
+}
+
+function eventoDelMesMessageBuilder(info: EventoDelMesInfo): string {
+    let event = null;
+    let country = null;
+    if (info.event) {
+        if (getCountryOnISO(info.event)) {
+            country = getCountryOnISO(info.event);
+        } else {
+            country = null;
+            event = info.event
+        }
+    }
+    return String.raw
+        `
+¡Hola a todo el mundo\! Paso por aquí para recordaros que ya está en marcha el nuevo *[Evento del Mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes)*\.
+En este mes de ${info.month?.toLowerCase() || '...uh creo que olvidé el mes...'} celebramos el *${country ? `mes de ${country}` : `evento de ${event}`}*\:
+    · Más información sobre el evento en *[su página en Wikipedia](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Pa%C3%ADs_del_mes/${currentYear}/${info.month})*\.
+    · Para consultar una lista de artículos sugeridos consulta *[esta página](${country ?
+            `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Solicitados/Pa%C3%ADses/${country}` :
+            `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Pa%C3%ADs_del_mes/${currentYear}/${currentMonth}#Art%C3%ADculos_sugeridos`
+        })*\.
 `
 }
 
@@ -90,6 +117,11 @@ bot.on('message', async (msg) => {
 
     if (messageText === 'hola') {
         bot.sendMessage(chatId, '¡Hola!');
+    }
+
+    if (messageText === 'fetch') {
+        const res = await getCurrentEventoDelMesInfo();
+        bot.sendMessage(chatId, eventoDelMesMessageBuilder(res), { 'parse_mode': 'MarkdownV2', 'disable_web_page_preview': true });
     }
 
 })
