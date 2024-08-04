@@ -37,3 +37,7 @@ export interface EventoDelMesInfo {
     event: string | null;
     month: Mes | null;
 }
+
+export interface CountryISOCodes {
+    [key: string]: { country: string, flag: string }
+}

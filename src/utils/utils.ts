@@ -15,7 +15,7 @@ function getCurrentMonthInSpanish(): Mes {
     return monthsInSpanish[currentMonthIndex];
 }
 
-export function getCountryOnISO(ISO: string | null): string | null {
+export function getCountryOnISO(ISO: string | null): { country: string, flag: string } | null {
     if (ISO == null) {
         return null
     }

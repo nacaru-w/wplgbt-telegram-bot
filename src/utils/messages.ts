@@ -41,19 +41,21 @@ export function newMemberMessageBuilder(newMember: string): string {
 export function eventoDelMesMessageBuilder(info: EventoDelMesInfo, addIntro: boolean): string {
     let event = null;
     let country = null;
+    let flag = null;
     if (info.event) {
-        if (getCountryOnISO(info.event)) {
-            country = getCountryOnISO(info.event);
+        const countryInfo = getCountryOnISO(info.event)
+        if (countryInfo) {
+            country = countryInfo.country
+            flag = countryInfo.flag
         } else {
-            country = null;
             event = info.event
         }
     }
     return String.raw
         `
-${addIntro ? '🗓️ ¡Hola a todo el mundo\! Paso por aquí para recordaros que ya está en marcha el nuevo *[Evento del Mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes)*\.\n' : ''}En este mes de ${info.month?.toLowerCase() || '...uh creo que olvidé el mes...'} celebramos el *${country ? `mes de ${country}` : `evento de ${event}`}*\:
+${addIntro ? '🗓️ ¡Hola a todo el mundo\! Paso por aquí para recordaros que ya está en marcha el nuevo *[Evento del Mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes)*\.\n' : ''}En este mes de ${info.month?.toLowerCase() || '...uh creo que olvidé el mes...'} celebramos el *${country ? `mes de ${country} ${flag}` : `evento de ${event}`}*\:
 · Más información sobre el evento en *[su página en Wikipedia](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Pa%C3%ADs_del_mes/${currentYear}/${info.month})*\.
-· Para consultar una lista de artículos sugeridos consulta *[esta página](${country ?
+· Para ver la lista de artículos sugeridos consulta *[esta página](${country ?
             `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Solicitados/Pa%C3%ADses/${country}` :
             `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Pa%C3%ADs_del_mes/${currentYear}/${currentMonth}#Art%C3%ADculos_sugeridos`
         })*\.
