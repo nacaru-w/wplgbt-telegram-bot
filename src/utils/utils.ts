@@ -1,12 +1,12 @@
 import { Mes } from "../types/bot-types";
 import { countryISOCodes } from "./iso-countries";
 
-function getCurrentYear(): string {
+export function getCurrentYear(): string {
     const currentYear = new Date().getFullYear();
     return currentYear.toString();
 }
 
-function getCurrentMonthInSpanish(): Mes {
+export function getCurrentMonthInSpanish(): Mes {
     const monthsInSpanish: Mes[] = [
         'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -35,6 +35,10 @@ export function removeDoubleSquareBrackets(input: string | null): string | null 
     }
 
     return input;
+}
+
+export function titleCase(word: string): string {
+    return word[0].toUpperCase() + word.slice(1).toLowerCase();
 }
 
 export const currentYear: string = getCurrentYear();
