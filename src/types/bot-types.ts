@@ -41,3 +41,9 @@ export interface EventoDelMesInfo {
 export interface CountryISOCodes {
     [key: string]: { country: string, flag: string }
 }
+
+export interface EventoDelMesRanking {
+    position: 1 | 2 | 3,
+    username: string,
+    articleCount: number
+}
