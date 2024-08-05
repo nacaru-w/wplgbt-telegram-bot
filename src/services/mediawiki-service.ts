@@ -1,6 +1,6 @@
-import { EventoDelMesInfo, Mes } from "../types/bot-types";
+import { EventoDelMesInfo, EventoDelMesRanking, Mes } from "../types/bot-types";
 import { MediawikiParams } from "../types/mediawiki-types";
-import { currentMonth, currentYear, removeDoubleSquareBrackets } from "../utils/utils";
+import { currentMonth, currentYear, removeDoubleSquareBrackets, titleCase } from "../utils/utils";
 
 const headers = new Headers({
     'Content-Type': 'application/json',
@@ -83,4 +83,53 @@ export async function getCurrentEventoDelMesInfo(): Promise<EventoDelMesInfo> {
     }
 
     return eventObj;
+}
+
+
+function extractEventoRanking(text: string): EventoDelMesRanking[] {
+    // Extract the "Artículos trabajados" section
+    const sectionRegex = /=== Artículos trabajados ===([\s\S]*?)===/;
+    const sectionMatch = sectionRegex.exec(text);
+    if (!sectionMatch) {
+        return [];
+    }
+    const sectionText = sectionMatch[1];
+
+    // Regular expression to match users
+    const userRegex = /{{u\|([^\}]+)}}/g;
+    const userCounts: Record<string, number> = {};
+    let match;
+
+    // Count the occurrences of each user, excluding {{u|---}}
+    while ((match = userRegex.exec(sectionText)) !== null) {
+        const username = match[1];
+        if (username !== '---') { // Exclude invalid username
+            if (userCounts[username]) {
+                userCounts[username]++;
+            } else {
+                userCounts[username] = 1;
+            }
+        }
+    }
+
+    // Convert the counts to an array and sort by count in descending order
+    const sortedUsers = Object.entries(userCounts)
+        .map(([username, count]) => ({ username, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3);
+
+    // Assign positions and convert to EventoDelMesRanking type
+    const result: EventoDelMesRanking[] = sortedUsers.map((user, index) => ({
+        position: (index + 1) as 1 | 2 | 3,
+        username: user.username,
+        articleCount: user.count,
+    }));
+
+    return result;
+}
+
+export async function getEventoRanking(month: string, year: string): Promise<EventoDelMesRanking[]> {
+    const wikiPage: string = `Wikiproyecto:LGBT/País del mes/${titleCase(month)}/${year}`;
+    const pageContent = await getWikipediaPageContent(wikiPage);
+    return extractEventoRanking(pageContent);
 }
