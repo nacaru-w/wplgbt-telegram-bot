@@ -1,5 +1,5 @@
 import { currentYear, currentMonth, getCountryOnISO } from "./utils";
-import { EventoDelMesInfo } from "../types/bot-types";
+import { EventoDelMesInfo, EventoDelMesRanking } from "../types/bot-types";
 
 export const startMessage = String.raw
     `
@@ -60,4 +60,25 @@ ${addIntro ? '🗓️ ¡Hola a todo el mundo\! Paso por aquí para recordaros qu
             `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Pa%C3%ADs_del_mes/${currentYear}/${currentMonth}#Art%C3%ADculos_sugeridos`
         })*\.
 `
+}
+
+export function eventoRankingBuilder(data: EventoDelMesRanking[], countryInfo: EventoDelMesInfo) {
+    let rankingString = '\n';
+    const medals = ['🥇', '🥈', '🥉']
+    let index = 0;
+    for (let participant of data) {
+        rankingString += String.raw`\- ${medals[index]} ${participant.username} con ${participant.articleCount} artículos` + '\n'
+        index++;
+    }
+    const country = getCountryOnISO(countryInfo.event)
+    let countryString = '';
+    if (country) {
+        countryString = `${country?.country} ${country?.flag}`
+    }
+    return String.raw
+        `
+En este evento del mes de ${country ? countryString : countryInfo.event}, la clasificación actual es la siguiente:
+${rankingString}
+Han participado un total de ${data.length} personas\. ${data.length < 3 ? `Eso son pocas personas 😔, ¿por qué no te animas a participar?` : 'Si aún no te has animado a participar, ¡hazlo para aumentar ese número\!'} 
+    `
 }
