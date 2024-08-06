@@ -6,7 +6,7 @@ import TelegramBot, { SendMessageOptions } from 'node-telegram-bot-api';
 import fs from 'fs';
 import cron from 'node-cron';
 import { getCurrentEventoDelMesInfo, getEventoRanking } from './services/mediawiki-service';
-import { eventoDelMesMessageBuilder, addedMessage, newMemberMessageBuilder, startMessage, helpMessage } from './utils/messages';
+import { eventoDelMesMessageBuilder, addedMessage, newMemberMessageBuilder, startMessage, helpMessage, eventoRankingBuilder } from './utils/messages';
 import { getCurrentMonthInSpanish, getCurrentYear } from './utils/utils';
 
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
@@ -93,9 +93,11 @@ bot.on('message', async (msg) => {
         console.log('✅ Evento del mes response sent')
     }
 
-    if (messageText == '/eventodelmesranking') {
-        console.log(await getEventoRanking(getCurrentYear(), getCurrentMonthInSpanish()));
-        console.log(await getEventoRanking('2024', 'Abril'));
+    if (messageText == '/eventodelmesranking' || messageText == '/eventodelmesranking@wikiproyectolgbtbot') {
+        const currentRanking = await getEventoRanking(getCurrentYear(), getCurrentMonthInSpanish());
+        const curentEventoInfo = await getCurrentEventoDelMesInfo();
+        bot.sendMessage(chatId, eventoRankingBuilder(currentRanking, curentEventoInfo), standardOptions);
+
     }
 
 
