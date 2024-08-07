@@ -75,10 +75,8 @@ ${addIntro ? '🗓️ ¡Hola a todo el mundo! Paso por aquí para recordaros que
 export function eventoRankingBuilder(data: EventoDelMesRanking[], countryInfo: EventoDelMesInfo) {
     let rankingString = '\n';
     const medals = ['🥇', '🥈', '🥉']
-    let index = 0;
     for (let participant of data) {
-        rankingString += `- ${medals[index]} *${participant.username}* con *${participant.articleCount}* artículos` + '\n'
-        index++;
+        rankingString += `- ${medals[participant.position - 1]} *${participant.username}* con *${participant.articleCount}* artículos` + '\n'
     }
     const country = getCountryOnISO(countryInfo.event)
     let countryString = '';
@@ -95,8 +93,3 @@ Han participado un total de __${data.length} personas__. ${data.length < 3 ? `Es
 
     return adaptToMarkdownV2(finalString);
 }
-
-export const mensajeDePrueba = adaptToMarkdownV2(`
-Esto es un ejemplo de un trozo de texto que es más amplio. La idea aquí es ver si la función que hemos puesto antes llevará a cabo el *parseo* de la forma correcta ||spoileeeers||.
-Sin liarla parda en [links](https://tonicorts.com). Vamos a ver si esto sale como debería, cojones. ¡Huy! Perdón por hablar así, a veces me pongo un poco _brat_ JAJA ~NO~.
-`);

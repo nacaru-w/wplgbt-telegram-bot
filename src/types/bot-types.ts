@@ -43,7 +43,7 @@ export interface CountryISOCodes {
 }
 
 export interface EventoDelMesRanking {
-    position: 1 | 2 | 3,
+    position: number,
     username: string,
     articleCount: number
 }

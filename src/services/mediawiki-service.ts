@@ -95,7 +95,7 @@ function extractEventoRanking(text: string): EventoDelMesRanking[] {
     }
     const sectionText = sectionMatch[1];
 
-    // Regular expression to match users
+    // Regular expression to match users, excluding {{u|---}}
     const userRegex = /{{u\|([^\}]+)}}/g;
     const userCounts: Record<string, number> = {};
     let match;
@@ -115,15 +115,25 @@ function extractEventoRanking(text: string): EventoDelMesRanking[] {
     // Convert the counts to an array and sort by count in descending order
     const sortedUsers = Object.entries(userCounts)
         .map(([username, count]) => ({ username, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 3);
+        .sort((a, b) => b.count - a.count);
 
-    // Assign positions and convert to EventoDelMesRanking type
-    const result: EventoDelMesRanking[] = sortedUsers.map((user, index) => ({
-        position: (index + 1) as 1 | 2 | 3,
-        username: user.username,
-        articleCount: user.count,
-    }));
+    // Assign positions with handling for ties
+    const result: EventoDelMesRanking[] = [];
+    let currentPosition = 1;
+    let currentRank = 1;
+
+    for (let i = 0; i < sortedUsers.length; i++) {
+        if (i > 0 && sortedUsers[i].count < sortedUsers[i - 1].count) {
+            currentRank = i + 1;
+        }
+        if (currentRank <= 3) { // Only include top 3 positions
+            result.push({
+                position: currentRank,
+                username: sortedUsers[i].username,
+                articleCount: sortedUsers[i].count,
+            });
+        }
+    }
 
     return result;
 }
