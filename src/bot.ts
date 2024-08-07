@@ -42,7 +42,7 @@ function saveData(data: { group: string, chatId: number }): void {
 
 function broadcastMessage(message: string, options: SendMessageOptions) {
     chatDictionary.forEach((chat) => {
-        // More formatting options for messages at https://corefunction to adapt text to markdown v2.telegram.org/bots/api#sendmessage
+        // More formatting options for messages at https://core.telegram.org/bots/api#sendmessage
         bot.sendMessage(chat.chatId, message, options);
     })
 }
