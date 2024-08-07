@@ -13,7 +13,7 @@ const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const token = config.token;
 
 const jsonFilePath = './idData.json';
-const standardOptions: SendMessageOptions = { 'parse_mode': 'MarkdownV2', 'disable_web_page_preview': true }
+const standardMV2Options: SendMessageOptions = { 'parse_mode': 'MarkdownV2', 'disable_web_page_preview': true }
 const legacyMarkdownOptions: SendMessageOptions = { 'parse_mode': 'Markdown', 'disable_web_page_preview': true }
 
 let chatDictionary: { group: string, chatId: number }[] = [];
@@ -42,7 +42,7 @@ function saveData(data: { group: string, chatId: number }): void {
 
 function broadcastMessage(message: string, options: SendMessageOptions) {
     chatDictionary.forEach((chat) => {
-        // More formatting options for messages at https://core.telegram.org/bots/api#sendmessage
+        // More formatting options for messages at https://corefunction to adapt text to markdown v2.telegram.org/bots/api#sendmessage
         bot.sendMessage(chat.chatId, message, options);
     })
 }
@@ -65,7 +65,7 @@ const scheduleMessages = () => {
     cron.schedule(monthlyCronExpression, async () => {
         const res = await getCurrentEventoDelMesInfo();
         const message = eventoDelMesMessageBuilder(res, true);
-        broadcastMessage(message, standardOptions);
+        broadcastMessage(message, standardMV2Options);
         console.log('✅ Scheduled monthly message sent:');
     });
 
@@ -78,28 +78,27 @@ bot.on('message', async (msg) => {
     const messageText = msg.text;
 
     if (messageText == '/start' || messageText == '/start@wikiproyectolgbtbot') {
-        bot.sendMessage(chatId, startMessage, standardOptions);
-        console.log('✅ Start message sent')
+        bot.sendMessage(chatId, startMessage, standardMV2Options);
+        console.log('✅ Start message sent');
     }
 
     if (messageText == '/help' || messageText == '/help@wikiproyectolgbtbot') {
-        bot.sendMessage(chatId, helpMessage, standardOptions);
-        console.log('✅ Help message sent')
+        bot.sendMessage(chatId, helpMessage, standardMV2Options);
+        console.log('✅ Help message sent');
     }
 
     if (messageText == '/eventodelmes' || messageText == '/eventodelmes@wikiproyectolgbtbot') {
         const res = await getCurrentEventoDelMesInfo();
-        bot.sendMessage(chatId, eventoDelMesMessageBuilder(res, false), standardOptions);
-        console.log('✅ Evento del mes response sent')
+        bot.sendMessage(chatId, eventoDelMesMessageBuilder(res, false), standardMV2Options);
+        console.log('✅ Evento del mes response sent');
     }
 
     if (messageText == '/eventodelmesranking' || messageText == '/eventodelmesranking@wikiproyectolgbtbot') {
         const currentRanking = await getEventoRanking(getCurrentYear(), getCurrentMonthInSpanish());
         const curentEventoInfo = await getCurrentEventoDelMesInfo();
-        bot.sendMessage(chatId, eventoRankingBuilder(currentRanking, curentEventoInfo), standardOptions);
-
+        bot.sendMessage(chatId, eventoRankingBuilder(currentRanking, curentEventoInfo), standardMV2Options);
+        console.log('✅ Sent out Evento del Mes ranking');
     }
-
 
 })
 
@@ -111,7 +110,7 @@ bot.on('my_chat_member', (msg) => {
 
     saveData({ group: chatTitle, chatId: chatId });
 
-    bot.sendMessage(chatId, addedMessage, standardOptions);
+    bot.sendMessage(chatId, addedMessage, standardMV2Options);
 })
 
 bot.on('new_chat_members', (msg) => {
@@ -123,7 +122,7 @@ bot.on('new_chat_members', (msg) => {
         if (!newMembers[0].is_bot) {
             const newMember = newMembers[0]
             console.log(`❗ Greeting new member that was added to group ${chatTitle}`);
-            bot.sendMessage(chatId, newMemberMessageBuilder(newMember.first_name || 'usuarie'), standardOptions)
+            bot.sendMessage(chatId, newMemberMessageBuilder(newMember.first_name || 'usuarie'), standardMV2Options)
         }
     }
 
