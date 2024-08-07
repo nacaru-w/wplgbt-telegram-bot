@@ -41,37 +41,5 @@ export function titleCase(word: string): string {
     return word[0].toUpperCase() + word.slice(1).toLowerCase();
 }
 
-export function adaptToMarkdownV2(input: string): string {
-    const specialCharacters = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'];
-    let escapedString = '';
-    let i = 0;
-
-    while (i < input.length) {
-        if (input[i] === '[') {
-            // Start of a potential markdown link
-            const endLinkTextIndex = input.indexOf(']', i);
-            const startUrlIndex = endLinkTextIndex !== -1 ? input.indexOf('(', endLinkTextIndex) : -1;
-            const endUrlIndex = startUrlIndex !== -1 ? input.indexOf(')', startUrlIndex) : -1;
-
-            if (endLinkTextIndex !== -1 && startUrlIndex === endLinkTextIndex + 1 && endUrlIndex !== -1) {
-                // Confirmed markdown link, skip escaping inside the link
-                escapedString += input.slice(i, endUrlIndex + 1);
-                i = endUrlIndex + 1;
-                continue;
-            }
-        }
-
-        // Escape special characters outside markdown links
-        if (specialCharacters.includes(input[i])) {
-            escapedString += '\\' + input[i];
-        } else {
-            escapedString += input[i];
-        }
-        i++;
-    }
-
-    return escapedString;
-}
-
 export const currentYear: string = getCurrentYear();
 export const currentMonth: Mes = getCurrentMonthInSpanish();
