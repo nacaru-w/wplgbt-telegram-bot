@@ -42,8 +42,14 @@ export interface CountryISOCodes {
     [key: string]: { country: string, flag: string }
 }
 
+export interface Article {
+    title: string,
+    bytes: number,
+    lesbian: boolean
+}
+
 export interface EventoDelMesRanking {
-    position: number,
     username: string,
-    articleCount: number
+    position: number,
+    articles: Article[]
 }
