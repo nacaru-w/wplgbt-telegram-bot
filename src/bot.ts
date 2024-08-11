@@ -5,8 +5,8 @@ import { LGBTDaysDictionary } from './utils/lgbt-days';
 import TelegramBot, { SendMessageOptions } from 'node-telegram-bot-api';
 import fs from 'fs';
 import cron from 'node-cron';
-import { getCurrentEventoDelMesInfo, getEventoRanking } from './services/mediawiki-service';
-import { eventoDelMesMessageBuilder, addedMessage, newMemberMessageBuilder, startMessage, helpMessage, eventoRankingBuilder } from './utils/messages';
+import { findTopLesbianBiographyContributor, getCurrentEventoDelMesInfo, getEventoInfo, rankEditors } from './services/mediawiki-service';
+import { eventoDelMesMessageBuilder, addedMessage, newMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder } from './utils/messages';
 import { getCurrentMonthInSpanish, getCurrentYear } from './utils/utils';
 
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
@@ -94,9 +94,14 @@ bot.on('message', async (msg) => {
     }
 
     if (messageText == '/eventodelmesranking' || messageText == '/eventodelmesranking@wikiproyectolgbtbot') {
-        const currentRanking = await getEventoRanking(getCurrentYear(), getCurrentMonthInSpanish());
-        const curentEventoInfo = await getCurrentEventoDelMesInfo();
-        bot.sendMessage(chatId, eventoRankingBuilder(currentRanking, curentEventoInfo), standardMV2Options);
+        const eventoInfo = await getEventoInfo(getCurrentYear(), getCurrentMonthInSpanish());
+
+        const rankedEditors = rankEditors(eventoInfo);
+        const lesbianContributor = findTopLesbianBiographyContributor(eventoInfo);
+        const currentEventoInfo = await getCurrentEventoDelMesInfo();
+
+        const rankingMessage = eventoDelMesRankingMessageBuilder(rankedEditors, lesbianContributor, currentEventoInfo)
+        bot.sendMessage(chatId, rankingMessage, standardMV2Options)
         console.log('✅ Sent out Evento del Mes ranking');
     }
 

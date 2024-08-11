@@ -44,12 +44,23 @@ export interface CountryISOCodes {
 
 export interface Article {
     title: string,
-    bytes: number,
+    characters: number,
     lesbian: boolean
 }
 
 export interface EventoDelMesRanking {
     username: string,
-    position: number,
     articles: Article[]
+}
+
+export interface RankedEditor {
+    username: string;
+    articleCount: number;
+    totalCharacters: number;
+}
+
+export interface LesbianArticleContribution {
+    username: string;
+    lesbianArticleCount: number;
+    totalLesbianCharacters: number;
 }

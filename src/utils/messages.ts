@@ -1,6 +1,6 @@
 import { currentYear, currentMonth, getCountryOnISO } from "./utils";
 import { adaptToMarkdownV2 } from "./parsing";
-import { EventoDelMesInfo, EventoDelMesRanking } from "../types/bot-types";
+import { EventoDelMesInfo, EventoDelMesRanking, RankedEditor } from "../types/bot-types";
 
 export const startMessage = adaptToMarkdownV2(
     `
@@ -72,26 +72,43 @@ ${addIntro ? '🗓️ ¡Hola a todo el mundo! Paso por aquí para recordaros que
 
 }
 
-export function eventoRankingBuilder(data: EventoDelMesRanking[], countryInfo: EventoDelMesInfo) {
+export function eventoDelMesRankingMessageBuilder(
+    rankedEditors: RankedEditor[],
+    topLesbianContributor: string | null,
+    countryInfo: EventoDelMesInfo
+): string {
     let rankingString = '\n';
-    const medals = ['🥇', '🥈', '🥉']
-    for (let participant of data) {
-        rankingString += `- ${medals[participant.position - 1]} *${participant.username}* con *${participant.articleCount}* artículos` + '\n'
-    }
-    const country = getCountryOnISO(countryInfo.event)
+    const medals = ['🥇', '🥈', '🥉'];
+
+    // Build the ranking string
+    rankedEditors.forEach((participant, index) => {
+        rankingString += `- ${medals[index] || ''} *${participant.username}* con *${participant.articleCount}* artículos (${participant.totalCharacters} bytes)\n`;
+    });
+
+    // Build the country and event information
+    const country = getCountryOnISO(countryInfo.event);
     let countryString = '';
     if (country) {
-        countryString = `${country?.country} ${country?.flag}`
+        countryString = `${country?.country} ${country?.flag}`;
     }
 
-    const totalArticles = data.reduce((acc, obj) => acc + obj.articleCount, 0)
-    const finalString =
-        `
+    const totalArticles = rankedEditors.reduce((acc, obj) => acc + obj.articleCount, 0);
+    const participantCount = rankedEditors.length;
+
+    // Build the final string with top lesbian contributor
+    let finalString = `
 En este *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Pa%C3%ADs_del_mes/${currentYear}/${currentMonth}) de${country ? '' : 'l'} ${country ? countryString : countryInfo.event}*, la clasificación actual es la siguiente:
 ${rankingString}
-Han participado un total de __${data.length} personas__. ${data.length < 3 ? `Eso son pocas personas 😔, ¿por qué no te animas a participar?` : 'Si aún no te has animado a participar, ¡hazlo para aumentar ese número!'} 
-En total, se han creado o mejorado __${totalArticles} artículos__.     
-`
+Han participado un total de __${participantCount} personas__. ${participantCount < 3 ? `Eso son pocas personas 😔, ¿por qué no te animas a participar?` : 'Si aún no te has animado a participar, ¡hazlo para aumentar ese número!'} 
+En total, se han creado o mejorado __${totalArticles} artículos__.
+`;
+
+    // Add the top lesbian contributor information
+    if (topLesbianContributor) {
+        finalString += `\nEnhorabuena a *${topLesbianContributor}* por ser quien más artículos sobre biografías de lesbianas ha creado hasta ahora en este evento.\n`;
+    } else {
+        finalString += `\nAún no hay premio de la mayor cantidad de artículos sobre biografías de lesbianas. ¿Podrías ser tú?\n`;
+    }
 
     return adaptToMarkdownV2(finalString);
 }

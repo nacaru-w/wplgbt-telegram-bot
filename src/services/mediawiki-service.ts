@@ -1,4 +1,4 @@
-import { EventoDelMesInfo, EventoDelMesRanking, Mes } from "../types/bot-types";
+import { Article, EventoDelMesInfo, EventoDelMesRanking, LesbianArticleContribution, Mes, RankedEditor } from "../types/bot-types";
 import { MediawikiParams } from "../types/mediawiki-types";
 import { currentMonth, currentYear, removeDoubleSquareBrackets, titleCase } from "../utils/utils";
 
@@ -85,8 +85,18 @@ export async function getCurrentEventoDelMesInfo(): Promise<EventoDelMesInfo> {
     return eventObj;
 }
 
+export async function getEventoInfo(month: string, year: string): Promise<EventoDelMesRanking[]> {
+    const wikiPage: string = `Wikiproyecto:LGBT/País del mes/${titleCase(month)}/${year}`;
+    const pageContent = await getWikipediaPageContent(wikiPage);
+    return extractEventoInfoFromTable(pageContent);
+}
 
-function extractEventoRanking(text: string): EventoDelMesRanking[] {
+export function isLesbianArticle(articleContent: string): boolean {
+    const lesbianCategoryPattern = /\[\[Categoría:(?:[^\]]*(lesbiana|lésbica)[^\]]*)\]\]/i;
+    return lesbianCategoryPattern.test(articleContent);
+}
+
+async function extractEventoInfoFromTable(text: string): Promise<EventoDelMesRanking[]> {
     // Extract the "Artículos trabajados" section
     const sectionRegex = /=== Artículos trabajados ===([\s\S]*?)===/;
     const sectionMatch = sectionRegex.exec(text);
@@ -95,51 +105,98 @@ function extractEventoRanking(text: string): EventoDelMesRanking[] {
     }
     const sectionText = sectionMatch[1];
 
-    // Regular expression to match users, excluding {{u|---}}
-    const userRegex = /{{u\|([^\}]+)}}/g;
-    const userCounts: Record<string, number> = {};
+    // Regular expression to match table rows in the "Artículos trabajados" section
+    const rowRegex = /\|-\s*\n\|\s*(\d+)\s*\|\|\s*\[\[(.*?)\]\]\s*\|\|\s*(.*?)\s*\|\|\s*\{\{[^\|]+\|[^\}]+\}\}\s*\|\|\s*\{\{u\|([^\}]+)\}\}/g;
     let match;
+    const userArticlesMap: Record<string, Article[]> = {};
 
-    // Count the occurrences of each user, excluding {{u|---}}
-    while ((match = userRegex.exec(sectionText)) !== null) {
-        const username = match[1];
-        if (username !== '---') { // Exclude invalid username
-            if (userCounts[username]) {
-                userCounts[username]++;
-            } else {
-                userCounts[username] = 1;
-            }
+    // Iterate over each row in the table
+    while ((match = rowRegex.exec(sectionText)) !== null) {
+        const [, , title, , username] = match;
+
+        const cleanTitle = title.trim();
+
+        // Fetch the content of the article
+        const articleContent = await getWikipediaPageContent(cleanTitle);
+
+        // Determine the number of characters and if the article is related to lesbian topics
+        const characters = articleContent.length;
+        const lesbian = isLesbianArticle(articleContent);
+
+        // Create the article object
+        const article: Article = {
+            title: cleanTitle,
+            characters,
+            lesbian,
+        };
+
+        // Add the article to the user's list
+        if (!userArticlesMap[username]) {
+            userArticlesMap[username] = [];
         }
+        userArticlesMap[username].push(article);
     }
 
-    // Convert the counts to an array and sort by count in descending order
-    const sortedUsers = Object.entries(userCounts)
-        .map(([username, count]) => ({ username, count }))
-        .sort((a, b) => b.count - a.count);
-
-    // Assign positions with handling for ties
-    const result: EventoDelMesRanking[] = [];
-    let currentPosition = 1;
-    let currentRank = 1;
-
-    for (let i = 0; i < sortedUsers.length; i++) {
-        if (i > 0 && sortedUsers[i].count < sortedUsers[i - 1].count) {
-            currentRank = i + 1;
-        }
-        if (currentRank <= 3) { // Only include top 3 positions
-            result.push({
-                position: currentRank,
-                username: sortedUsers[i].username,
-                articleCount: sortedUsers[i].count,
-            });
-        }
-    }
+    // Convert the map to an array of EventoDelMesRanking objects
+    const result: EventoDelMesRanking[] = Object.entries(userArticlesMap).map(([username, articles]) => ({
+        username,
+        articles,
+    }));
 
     return result;
 }
 
-export async function getEventoRanking(month: string, year: string): Promise<EventoDelMesRanking[]> {
-    const wikiPage: string = `Wikiproyecto:LGBT/País del mes/${titleCase(month)}/${year}`;
-    const pageContent = await getWikipediaPageContent(wikiPage);
-    return extractEventoRanking(pageContent);
+export function rankEditors(eventoDelMesRankings: EventoDelMesRanking[]): RankedEditor[] {
+    // Calculate the article count and total characters for each user
+    const rankingData: RankedEditor[] = eventoDelMesRankings.map((entry) => {
+        const articleCount = entry.articles.length;
+        const totalCharacters = entry.articles.reduce((sum, article) => sum + article.characters, 0);
+
+        return {
+            username: entry.username,
+            articleCount,
+            totalCharacters,
+        };
+    });
+
+    // Sort by article count in descending order, and by total characters in case of a tie
+    rankingData.sort((a, b) => {
+        if (b.articleCount === a.articleCount) {
+            return b.totalCharacters - a.totalCharacters;
+        }
+        return b.articleCount - a.articleCount;
+    });
+
+    return rankingData;
+}
+
+export function findTopLesbianBiographyContributor(eventoDelMesRankings: EventoDelMesRanking[]): string | null {
+    const lesbianContributions: LesbianArticleContribution[] = eventoDelMesRankings.map((entry) => {
+        // Filter only lesbian articles
+        const lesbianArticles = entry.articles.filter(article => article.lesbian);
+        const lesbianArticleCount = lesbianArticles.length;
+        const totalLesbianCharacters = lesbianArticles.reduce((sum, article) => sum + article.characters, 0);
+
+        return {
+            username: entry.username,
+            lesbianArticleCount,
+            totalLesbianCharacters,
+        };
+    });
+
+    // Sort by lesbian article count in descending order, and by total characters in case of a tie
+    lesbianContributions.sort((a, b) => {
+        if (b.lesbianArticleCount === a.lesbianArticleCount) {
+            return b.totalLesbianCharacters - a.totalLesbianCharacters;
+        }
+        return b.lesbianArticleCount - a.lesbianArticleCount;
+    });
+
+    // Check if there are contributors with lesbian articles
+    if (lesbianContributions.length === 0 || lesbianContributions[0].lesbianArticleCount === 0) {
+        return null; // No valid contributors
+    }
+
+    // Return the username of the top contributor
+    return lesbianContributions[0].username;
 }
