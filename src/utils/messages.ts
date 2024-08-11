@@ -84,12 +84,14 @@ export function eventoRankingBuilder(data: EventoDelMesRanking[], countryInfo: E
         countryString = `${country?.country} ${country?.flag}`
     }
 
+    const totalArticles = data.reduce((acc, obj) => acc + obj.articleCount, 0)
     const finalString =
         `
 En este *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Pa%C3%ADs_del_mes/${currentYear}/${currentMonth}) de${country ? '' : 'l'} ${country ? countryString : countryInfo.event}*, la clasificación actual es la siguiente:
 ${rankingString}
 Han participado un total de __${data.length} personas__. ${data.length < 3 ? `Eso son pocas personas 😔, ¿por qué no te animas a participar?` : 'Si aún no te has animado a participar, ¡hazlo para aumentar ese número!'} 
-    `
+En total, se han creado o mejorado __${totalArticles} artículos__.     
+`
 
     return adaptToMarkdownV2(finalString);
 }
