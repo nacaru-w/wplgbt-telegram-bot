@@ -1,18 +1,34 @@
 import { Mes } from "../types/bot-types";
 import { countryISOCodes } from "./iso-countries";
 
+export const monthsInSpanish: Mes[] = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
 export function getCurrentYear(): string {
     const currentYear = new Date().getFullYear();
     return currentYear.toString();
 }
 
-export function getCurrentMonthInSpanish(): Mes {
-    const monthsInSpanish: Mes[] = [
-        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
+export function getCurrentMonthAndYear(): { month: Mes, year: string } {
     const currentMonthIndex = new Date().getMonth();
-    return monthsInSpanish[currentMonthIndex];
+    return {
+        month: monthsInSpanish[currentMonthIndex],
+        year: getCurrentYear()
+    }
+
+}
+
+export function getLastMonthAndYear(): { month: Mes, year: string } {
+    const currentMonthObj = getCurrentMonthAndYear();
+    const indexInMonthArray = monthsInSpanish.indexOf(currentMonthObj.month)
+    const lastMonth = indexInMonthArray == 0 ? 'Diciembre' : monthsInSpanish[indexInMonthArray - 1];
+    const correspondingYear = lastMonth !== 'Diciembre' ? currentMonthObj.year : +currentMonthObj.year - 1;
+    return {
+        month: lastMonth,
+        year: correspondingYear.toString()
+    }
 }
 
 export function getCountryOnISO(ISO: string | null): { country: string, flag: string } | null {
@@ -42,4 +58,8 @@ export function titleCase(word: string): string {
 }
 
 export const currentYear: string = getCurrentYear();
-export const currentMonth: Mes = getCurrentMonthInSpanish();
+export const currentMonth: Mes = getCurrentMonthAndYear().month;
+
+function indexof(mes: string) {
+    throw new Error("Function not implemented.");
+}

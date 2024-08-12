@@ -1,6 +1,6 @@
-import { currentYear, currentMonth, getCountryOnISO } from "./utils";
+import { currentYear, currentMonth, getCountryOnISO, getLastMonthAndYear } from "./utils";
 import { adaptToMarkdownV2 } from "./parsing";
-import { EventoDelMesInfo, EventoDelMesRanking, RankedEditor } from "../types/bot-types";
+import { EventoDelMesInfo, EventoDelMesRanking, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
 
 export const startMessage = adaptToMarkdownV2(
     `
@@ -74,7 +74,7 @@ ${addIntro ? '🗓️ ¡Hola a todo el mundo! Paso por aquí para recordaros que
 
 export function eventoDelMesRankingMessageBuilder(
     rankedEditors: RankedEditor[],
-    topLesbianContributor: string | null,
+    topLesbianContributorObj: TopLesbianArticleContributor | null,
     countryInfo: EventoDelMesInfo
 ): string {
     let rankingString = '\n';
@@ -104,10 +104,52 @@ En total, se han creado o mejorado __${totalArticles} artículos__.
 `;
 
     // Add the top lesbian contributor information
-    if (topLesbianContributor) {
-        finalString += `\nEnhorabuena a *${topLesbianContributor}* por ser quien más artículos sobre biografías de lesbianas ha creado hasta ahora en este evento.\n`;
+    if (topLesbianContributorObj) {
+        finalString += `\nEnhorabuena a *${topLesbianContributorObj.topLesbianContributor}* por ser quien más artículos sobre biografías de lesbianas ha creado hasta ahora en este evento, con un total de ${topLesbianContributorObj.numberOfLesbianArticles}.\n`;
     } else {
         finalString += `\nAún no hay premio de la mayor cantidad de artículos sobre biografías de lesbianas. ¿Podrías ser tú?\n`;
+    }
+
+    return adaptToMarkdownV2(finalString);
+}
+
+export function lastEventoDelMesRankingBuilder(
+    rankedEditors: RankedEditor[],
+    topLesbianContributorObj: TopLesbianArticleContributor | null,
+    countryInfo: EventoDelMesInfo
+): string {
+    let rankingString = '\n';
+    const medals = ['🥇', '🥈', '🥉'];
+
+    // Build the ranking string
+    rankedEditors.forEach((participant, index) => {
+        rankingString += `- ${medals[index] || ''} *${participant.username}* con *${participant.articleCount}* artículos (${participant.totalCharacters} bytes)\n`;
+    });
+
+    // Build the country and event information
+    const country = getCountryOnISO(countryInfo.event);
+    let countryString = '';
+    if (country) {
+        countryString = `${country?.country} ${country?.flag}`;
+    }
+
+    const totalArticles = rankedEditors.reduce((acc, obj) => acc + obj.articleCount, 0);
+    const participantCount = rankedEditors.length;
+    const lastMonthObj: { month: Mes, year: string } = getLastMonthAndYear();
+
+    // Build the final string with top lesbian contributor
+    let finalString = `
+En el último *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Pa%C3%ADs_del_mes/${lastMonthObj.year}/${lastMonthObj.month}) de${country ? '' : 'l'} ${country ? countryString : countryInfo.event}*, la clasificación fue la siguiente:
+${rankingString}
+Participaron un total de __${participantCount} personas__. ${participantCount < 3 ? `Una pena que no participasen más 😔... ` : '¡Eso son bastantes personas!'} 
+En total, se crearon o mejoraron __${totalArticles} artículos__.
+        `;
+
+    // Add the top lesbian contributor information
+    if (topLesbianContributorObj) {
+        finalString += `\n*${topLesbianContributorObj.topLesbianContributor}* fue quien más artículos sobre biografías de lesbianas creó, con un total de ${topLesbianContributorObj.numberOfLesbianArticles}.\n`;
+    } else {
+        finalString += `\nNadie escribió artículos sobre mujeres lesbianas... qué mal 😕\n`;
     }
 
     return adaptToMarkdownV2(finalString);

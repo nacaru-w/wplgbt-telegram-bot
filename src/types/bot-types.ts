@@ -64,3 +64,8 @@ export interface LesbianArticleContribution {
     lesbianArticleCount: number;
     totalLesbianCharacters: number;
 }
+
+export interface TopLesbianArticleContributor {
+    topLesbianContributor: string;
+    numberOfLesbianArticles: number
+}

@@ -5,9 +5,10 @@ import { LGBTDaysDictionary } from './utils/lgbt-days';
 import TelegramBot, { SendMessageOptions } from 'node-telegram-bot-api';
 import fs from 'fs';
 import cron from 'node-cron';
-import { findTopLesbianBiographyContributor, getCurrentEventoDelMesInfo, getEventoInfo, rankEditors } from './services/mediawiki-service';
-import { eventoDelMesMessageBuilder, addedMessage, newMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder } from './utils/messages';
-import { getCurrentMonthInSpanish, getCurrentYear } from './utils/utils';
+import { findTopLesbianBiographyContributor, getCurrentEventoDelMesInfo, getEventoParticipantInfo, getLastEventoDelMesInfo, rankEditors } from './services/mediawiki-service';
+import { eventoDelMesMessageBuilder, addedMessage, newMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder, lastEventoDelMesRankingBuilder } from './utils/messages';
+import { getCurrentMonthAndYear, getCurrentYear, getLastMonthAndYear } from './utils/utils';
+import { Mes } from './types/bot-types';
 
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const token = config.token;
@@ -94,7 +95,8 @@ bot.on('message', async (msg) => {
     }
 
     if (messageText == '/eventodelmesranking' || messageText == '/eventodelmesranking@wikiproyectolgbtbot') {
-        const eventoInfo = await getEventoInfo(getCurrentYear(), getCurrentMonthInSpanish());
+        const currentMonthObj: { month: Mes, year: string } = getCurrentMonthAndYear();
+        const eventoInfo = await getEventoParticipantInfo(currentMonthObj.year, currentMonthObj.month);
 
         const rankedEditors = rankEditors(eventoInfo);
         const lesbianContributor = findTopLesbianBiographyContributor(eventoInfo);
@@ -103,6 +105,26 @@ bot.on('message', async (msg) => {
         const rankingMessage = eventoDelMesRankingMessageBuilder(rankedEditors, lesbianContributor, currentEventoInfo)
         bot.sendMessage(chatId, rankingMessage, standardMV2Options)
         console.log('✅ Sent out Evento del Mes ranking');
+    }
+
+    if (messageText == '/eventodelmesrankingpasado' || messageText == '/eventodelmesrankingpasado@wikiproyectolgbtbot') {
+        const lastMonthObj: { month: Mes, year: string } = getLastMonthAndYear();
+        const eventoInfo = await getEventoParticipantInfo(lastMonthObj.year, lastMonthObj.month);
+
+        const lastRankedEditors = rankEditors(eventoInfo);
+        const lastlesbianContributor = findTopLesbianBiographyContributor(eventoInfo);
+        const lastEventoInfo = await getLastEventoDelMesInfo();
+
+        const lastRankingMessage = lastEventoDelMesRankingBuilder(
+            lastRankedEditors,
+            lastlesbianContributor,
+            lastEventoInfo
+        );
+
+        bot.sendMessage(chatId, lastRankingMessage, standardMV2Options);
+
+        console.log('✅ Sent out last Evento del Mes ranking');
+
     }
 
 })
