@@ -147,7 +147,7 @@ En total, se crearon o mejoraron __${totalArticles} artículos__.
 
     // Add the top lesbian contributor information
     if (topLesbianContributorObj) {
-        finalString += `\n*${topLesbianContributorObj.topLesbianContributor}* fue quien más artículos sobre biografías de lesbianas creó, con un total de ${topLesbianContributorObj.numberOfLesbianArticles}.\n`;
+        finalString += `\n*${topLesbianContributorObj.topLesbianContributor}* fue quien más biografías de lesbianas creó, con un total de ${topLesbianContributorObj.numberOfLesbianArticles} artículos.\n`;
     } else {
         finalString += `\nNadie escribió artículos sobre mujeres lesbianas... qué mal 😕\n`;
     }
