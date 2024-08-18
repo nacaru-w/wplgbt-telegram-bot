@@ -107,7 +107,7 @@ En total, se han creado o mejorado __${totalArticles} artículos__.
     if (topLesbianContributorObj) {
         finalString += `\nEnhorabuena a *${topLesbianContributorObj.topLesbianContributor}* por ser quien más artículos sobre biografías de lesbianas ha creado hasta ahora en este evento, con un total de ${topLesbianContributorObj.numberOfLesbianArticles}.\n`;
     } else {
-        finalString += `\nAún no hay premio de la mayor cantidad de artículos sobre biografías de lesbianas. ¿Podrías ser tú?\n`;
+        finalString += `\nAún no hay premio para la persona que haya redactado la mayor cantidad de artículos sobre biografías de lesbianas. ¿Podrías ser tú?\n`;
     }
 
     return adaptToMarkdownV2(finalString);
