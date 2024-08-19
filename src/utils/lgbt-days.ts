@@ -86,6 +86,11 @@ export const LGBTDaysDictionary: LGBTDays = {
         month: 7,
         days: [14]
     },
+    'Día de la bandera trans': {
+        keyword: 'trans',
+        month: 8,
+        days: [19]
+    },
     'Día de la Visibilidad Bisexual': {
         keyword: 'bisexual',
         month: 9,
