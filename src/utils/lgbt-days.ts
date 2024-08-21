@@ -76,7 +76,12 @@ export const LGBTDaysDictionary: LGBTDays = {
         month: 5,
         days: [24]
     },
-    'Día Internacional del Orgullo LGBT': {
+    'Día internacional de la bandera LGBT+': {
+        keyword: 'lgbt',
+        month: 6,
+        days: [25]
+    },
+    'Día Internacional del Orgullo LGBT+': {
         keyword: 'lgbt',
         month: 6,
         days: [28]
