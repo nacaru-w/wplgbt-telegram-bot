@@ -186,7 +186,7 @@ export function rankEditors(eventoDelMesRankings: EventoDelMesRanking[]): Ranked
     return rankingData;
 }
 
-export function findTopLesbianBiographyContributor(eventoDelMesInfo: EventoDelMesRanking[]): TopLesbianArticleContributor[] | null {
+export function findTopLesbianBiographyContributors(eventoDelMesInfo: EventoDelMesRanking[]): TopLesbianArticleContributor[] | null {
     const lesbianContributions: LesbianArticleContribution[] = eventoDelMesInfo.map((entry) => {
         // Filter only lesbian articles
         const lesbianArticles = entry.articles.filter(article => article.lesbian);

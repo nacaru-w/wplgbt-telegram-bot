@@ -74,7 +74,7 @@ ${addIntro ? '🗓️ ¡Hola a todo el mundo! Paso por aquí para recordaros que
 
 export function eventoDelMesRankingMessageBuilder(
     rankedEditors: RankedEditor[],
-    topLesbianContributorObj: TopLesbianArticleContributor | null,
+    topLesbianContributorArr: TopLesbianArticleContributor[] | null,
     countryInfo: EventoDelMesInfo
 ): string {
     let rankingString = '\n';
@@ -104,18 +104,27 @@ En total, se han creado o mejorado __${totalArticles} artículos__.
 `;
 
     // Add the top lesbian contributor information
-    if (topLesbianContributorObj) {
-        finalString += `\nEnhorabuena a *${topLesbianContributorObj.topLesbianContributor}* por ser quien más artículos sobre biografías de lesbianas ha creado hasta ahora en este evento, con un total de ${topLesbianContributorObj.numberOfLesbianArticles}.\n`;
+    if (topLesbianContributorArr) {
+        if (topLesbianContributorArr.length > 1) {
+            let lesbianTieString: string = '\n👭 Parece que hay empate en el primer puesto para la persona que más biografías de lesbianas redactó:'
+            for (let lesbianContributor of topLesbianContributorArr) {
+                const artCount = lesbianContributor.numberOfLesbianArticles;
+                const contributor = lesbianContributor.topLesbianContributor;
+                lesbianTieString += `\n- *${contributor}*, con ${artCount} artículo${artCount > 1 ? 's' : ''}`
+            }
+            finalString += lesbianTieString;
+        } else {
+            finalString += `\n👭 Enhorabuena a *${topLesbianContributorArr[0].topLesbianContributor}* por ser quien más biografías de lesbianas ha creado hasta ahora en este evento, con un total de ${topLesbianContributorArr[0].numberOfLesbianArticles}.\n`;
+        }
     } else {
-        finalString += `\nAún no hay premio para la persona que haya redactado la mayor cantidad de artículos sobre biografías de lesbianas. ¿Podrías ser tú?\n`;
+        finalString += `\n⚠️ Aún no hay premio para la persona que haya redactado la mayor cantidad de artículos sobre biografías de lesbianas. ¿Podrías ser tú?\n`;
     }
-
     return adaptToMarkdownV2(finalString);
 }
 
 export function lastEventoDelMesRankingBuilder(
     rankedEditors: RankedEditor[],
-    topLesbianContributorObj: TopLesbianArticleContributor | null,
+    topLesbianContributorArr: TopLesbianArticleContributor[] | null,
     countryInfo: EventoDelMesInfo
 ): string {
     let rankingString = '\n';
@@ -146,8 +155,18 @@ En total, se crearon o mejoraron __${totalArticles} artículos__.
         `;
 
     // Add the top lesbian contributor information
-    if (topLesbianContributorObj) {
-        finalString += `\n*${topLesbianContributorObj.topLesbianContributor}* fue quien más biografías de lesbianas creó, con un total de ${topLesbianContributorObj.numberOfLesbianArticles} artículos.\n`;
+    if (topLesbianContributorArr) {
+        if (topLesbianContributorArr.length > 1) {
+            let lesbianTieString: string = '\n👭 Parece que hubo empate en el primer puesto para la persona que más biografías de personas lesbianas redactó:'
+            for (let lesbianContributor of topLesbianContributorArr) {
+                const artCount = lesbianContributor.numberOfLesbianArticles;
+                const contributor = lesbianContributor.topLesbianContributor;
+                lesbianTieString += `\n- *${contributor}*, con ${artCount} artículo${artCount > 1 ? 's' : ''}`
+            }
+            finalString += lesbianTieString;
+        } else {
+            finalString += `\n👭 *${topLesbianContributorArr[0].topLesbianContributor}* fue quien más biografías de lesbianas redactó, con un total de ${topLesbianContributorArr[0].numberOfLesbianArticles} artículos.\n`;
+        }
     } else {
         finalString += `\nNadie escribió artículos sobre mujeres lesbianas... qué mal 😕\n`;
     }
