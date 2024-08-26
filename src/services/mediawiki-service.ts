@@ -186,7 +186,7 @@ export function rankEditors(eventoDelMesRankings: EventoDelMesRanking[]): Ranked
     return rankingData;
 }
 
-export function findTopLesbianBiographyContributor(eventoDelMesInfo: EventoDelMesRanking[]): TopLesbianArticleContributor | null {
+export function findTopLesbianBiographyContributor(eventoDelMesInfo: EventoDelMesRanking[]): TopLesbianArticleContributor[] | null {
     const lesbianContributions: LesbianArticleContribution[] = eventoDelMesInfo.map((entry) => {
         // Filter only lesbian articles
         const lesbianArticles = entry.articles.filter(article => article.lesbian);
@@ -213,9 +213,20 @@ export function findTopLesbianBiographyContributor(eventoDelMesInfo: EventoDelMe
         return null; // No valid contributors
     }
 
-    // Return the username of the top contributor
-    return {
-        topLesbianContributor: lesbianContributions[0].username,
-        numberOfLesbianArticles: lesbianContributions[0].lesbianArticleCount
+    // Find all top contributors (handle ties)
+    const topContributors: TopLesbianArticleContributor[] = [];
+    const topArticleCount = lesbianContributions[0].lesbianArticleCount;
+
+    for (const contribution of lesbianContributions) {
+        if (contribution.lesbianArticleCount === topArticleCount) {
+            topContributors.push({
+                topLesbianContributor: contribution.username,
+                numberOfLesbianArticles: contribution.lesbianArticleCount
+            });
+        } else {
+            break; // No need to continue since the list is sorted in descending order
+        }
     }
+
+    return topContributors.length > 0 ? topContributors : null;
 }
