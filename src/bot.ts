@@ -63,7 +63,7 @@ const scheduleMessages = () => {
         })
     }
 
-    const monthlyCronExpression = '0 16 1 * *'; // At 18:00 on the 1st day of every month
+    const monthlyCronExpression = '0 18 1 * *'; // At 18:00 on the 1st day of every month
     cron.schedule(monthlyCronExpression, async () => {
         try {
             const res = await getCurrentEventoDelMesInfo();
@@ -72,6 +72,18 @@ const scheduleMessages = () => {
             console.log('✅ Scheduled monthly message sent:');
         } catch (error) {
             console.error('❌ Failed to send scheduled monthly message:', error);
+        }
+    });
+
+    // Schedule test message every 300 minutes
+    const tenMinuteCronExpression = '*/300 * * * *'; // Every 10 minutes
+    cron.schedule(tenMinuteCronExpression, () => {
+        try {
+            const message = adaptToMarkdownV2('🔔 Esto es una prueba.');
+            broadcastMessage(message, standardMV2Options);
+            console.log('✅ Test message sent:', message);
+        } catch (error) {
+            console.error('❌ Something went wrong')
         }
     });
 
