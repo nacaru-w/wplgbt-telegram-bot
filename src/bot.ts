@@ -9,6 +9,7 @@ import { findTopLesbianBiographyContributors, getCurrentEventoDelMesInfo, getEve
 import { eventoDelMesMessageBuilder, addedMessage, newMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder, lastEventoDelMesRankingBuilder } from './utils/messages';
 import { getCurrentMonthAndYear, getCurrentYear, getLastMonthAndYear } from './utils/utils';
 import { Mes } from './types/bot-types';
+import { adaptToMarkdownV2 } from './utils/parsing';
 
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const token = config.token;
@@ -62,12 +63,16 @@ const scheduleMessages = () => {
         })
     }
 
-    const monthlyCronExpression = '0 18 1 * *'; // At 18:00 on the 1st day of every month
+    const monthlyCronExpression = '0 16 1 * *'; // At 18:00 on the 1st day of every month
     cron.schedule(monthlyCronExpression, async () => {
-        const res = await getCurrentEventoDelMesInfo();
-        const message = eventoDelMesMessageBuilder(res, true);
-        broadcastMessage(message, standardMV2Options);
-        console.log('✅ Scheduled monthly message sent:');
+        try {
+            const res = await getCurrentEventoDelMesInfo();
+            const message = eventoDelMesMessageBuilder(res, true);
+            broadcastMessage(message, standardMV2Options);
+            console.log('✅ Scheduled monthly message sent:');
+        } catch (error) {
+            console.error('❌ Failed to send scheduled monthly message:', error);
+        }
     });
 
 }
@@ -90,7 +95,7 @@ bot.on('message', async (msg) => {
 
     if (messageText == '/eventodelmes' || messageText == '/eventodelmes@wikiproyectolgbtbot') {
         const res = await getCurrentEventoDelMesInfo();
-        bot.sendMessage(chatId, eventoDelMesMessageBuilder(res, false), standardMV2Options);
+        bot.sendMessage(chatId, eventoDelMesMessageBuilder(res, true), standardMV2Options);
         console.log('✅ Evento del mes response sent');
     }
 
