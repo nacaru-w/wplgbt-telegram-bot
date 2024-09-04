@@ -1,6 +1,6 @@
 import { currentYear, currentMonth, getCountryOnISO, getLastMonthAndYear } from "./utils";
 import { adaptToMarkdownV2 } from "./parsing";
-import { EventoDelMesInfo, EventoDelMesRanking, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
+import { EventoDelMesInfo, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
 
 export const startMessage = adaptToMarkdownV2(
     `
