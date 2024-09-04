@@ -76,10 +76,10 @@ const scheduleMessages = () => {
     });
 
     // Schedule test message every 300 minutes
-    const tenMinuteCronExpression = '*/300 * * * *'; // Every 10 minutes
+    const tenMinuteCronExpression = '0 20 * * *'; // Everyday
     cron.schedule(tenMinuteCronExpression, () => {
         try {
-            const message = adaptToMarkdownV2('🔔 Esto es una prueba.');
+            const message = adaptToMarkdownV2('🔔 Esto es una prueba de mensaje automatizado diario.');
             broadcastMessage(message, standardMV2Options);
             console.log('✅ Test message sent:', message);
         } catch (error) {
