@@ -12,7 +12,7 @@ export const countryISOCodes: CountryISOCodes = {
     "DOM": { country: "República Dominicana", flag: "🇩🇴" },
     "ECU": { country: "Ecuador", flag: "🇪🇨" },
     "SLV": { country: "El Salvador", flag: "🇸🇻" },
-    "GTM": { country: "Guatemala", flag: "🇬🇹" },
+    "GUA": { country: "Guatemala", flag: "🇬🇹" },
     "HTI": { country: "Haití", flag: "🇭🇹" },
     "HND": { country: "Honduras", flag: "🇭🇳" },
     "MEX": { country: "México", flag: "🇲🇽" },
