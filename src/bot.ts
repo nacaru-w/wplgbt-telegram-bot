@@ -166,7 +166,7 @@ bot.on('new_chat_members', (msg) => {
         if (!newMembers[0].is_bot) {
             const newMember = newMembers[0]
             console.log(`❗ Greeting new member that was added to group ${chatTitle}`);
-            bot.sendMessage(chatId, newMemberMessageBuilder(newMember.first_name || 'usuarie'), standardMV2Options)
+            bot.sendMessage(chatId, newMemberMessageBuilder(newMember.username || 'usuarie'), standardMV2Options)
         }
     }
 

@@ -31,7 +31,7 @@ Ahora mismo mis funciones son las siguientes:
 export function newMemberMessageBuilder(newMember: string): string {
     const finalString =
         `
-¡Hola, ${newMember}! Te doy la bienvenida al grupo de Telegram del *[WikiProyecto LGBT\\+](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT)*.
+¡Hola, @${newMember}! Te doy la bienvenida al grupo de Telegram del *[WikiProyecto LGBT\\+](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT)*.
 
 · Recuerda presentarte al grupo: indica tus pronombres y otros detalles sobre cómo quieres que nos refiramos a ti.
 · Indica tu _username_ en los proyectos Wikimedia.
