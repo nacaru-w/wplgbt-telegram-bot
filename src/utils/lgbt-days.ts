@@ -134,7 +134,7 @@ export const LGBTDaysDictionary: LGBTDays = {
     'Semana de la Concienciación Transgénero': {
         keyword: 'trans',
         month: 11,
-        days: getTransgenderWeekDays()
+        days: [13, 14, 15, 16, 17, 18, 19]
     },
     'Día de la Memoria Intersexual': {
         keyword: 'intersex',

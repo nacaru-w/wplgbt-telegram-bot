@@ -1,6 +1,6 @@
 import { Article, EventoDelMesInfo, EventoDelMesRanking, LesbianArticleContribution, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
 import { MediawikiParams } from "../types/mediawiki-types";
-import { currentMonth, currentYear, getLastMonthAndYear, removeDoubleSquareBrackets, titleCase } from "../utils/utils";
+import { currentMonth, currentYear, getLastMonthAndYear, removeBrackets, titleCase } from "../utils/utils";
 
 const headers = new Headers({
     'Content-Type': 'application/json',
@@ -57,15 +57,15 @@ function extractEventoDelMesTableByYear(content: string, year: string): string |
     return yearSectionMatch[1].trim();
 }
 
-function findEventForGivenTime(fullPage: string, year: string, month: Mes): string | null {
+function findEventForGivenTime(fullPage: string, year: string, month: string): string | null {
     // Extract the section for the specified year
     const yearSection = extractEventoDelMesTableByYear(fullPage, year);
     if (!yearSection) {
         return null;
     }
 
-    // Define regex to match the month data
-    const monthPattern = new RegExp(`\\| ${month}\\s*\\|\\s*([^|]*)`, 'i');
+    // Define a regex to match any content in {{...}}, [[...|...]], or plain text format after the specified month
+    const monthPattern = new RegExp(`\\|\\s*${month}\\s*\\|\\s*([^{|\\n\\[]*(?:\\{\\{[^}]+\\}\\}|\\[\\[[^\\]]+\\]\\]|[^|\\n]+))`, 'i');
     const monthMatch = yearSection.match(monthPattern);
 
     return monthMatch ? monthMatch[1].trim() : null;
@@ -78,7 +78,7 @@ export async function getCurrentEventoDelMesInfo(): Promise<EventoDelMesInfo> {
     const event = findEventForGivenTime(pageContent, currentYear, currentMonth)
 
     const eventObj = {
-        event: removeDoubleSquareBrackets(event),
+        event: removeBrackets(event),
         month: currentMonth
     }
 
@@ -93,7 +93,7 @@ export async function getLastEventoDelMesInfo(): Promise<EventoDelMesInfo> {
     const event = findEventForGivenTime(pageContent, lastMonthAndYear.year, lastMonthAndYear.month);
 
     const eventObj = {
-        event: removeDoubleSquareBrackets(event),
+        event: removeBrackets(event),
         month: lastMonthAndYear.month
     }
 

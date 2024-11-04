@@ -38,18 +38,24 @@ export function getCountryOnISO(ISO: string | null): { country: string, flag: st
     return countryISOCodes[ISO] || null;
 }
 
-export function removeDoubleSquareBrackets(input: string | null): string | null {
+export function removeBrackets(input: string | null): string | null {
     if (!input) {
-        return null
+        return null;
     }
 
-    const regex = /^\{\{(.*?)\}\}$/;
-    const match = input.match(regex);
-
+    // First, check if the input has double square brackets [[...]]
+    let match = input.match(/^\[\[(?:.*?\|)?(.*?)\]\]$/);
     if (match) {
         return match[1];
     }
 
+    // If no match for [[...]], check for double curly braces {{...}}
+    match = input.match(/^\{\{(.*?)\}\}$/);
+    if (match) {
+        return match[1];
+    }
+
+    // Return the original input if no brackets were found
     return input;
 }
 
