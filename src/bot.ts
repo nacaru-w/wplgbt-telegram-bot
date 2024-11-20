@@ -5,11 +5,10 @@ import { LGBTDaysDictionary } from './utils/lgbt-days';
 import TelegramBot, { SendMessageOptions } from 'node-telegram-bot-api';
 import fs from 'fs';
 import cron from 'node-cron';
-import { findTopLesbianBiographyContributors, getCurrentEventoDelMesInfo, getEventoParticipantInfo, getLastEventoDelMesInfo, rankEditors } from './services/mediawiki-service';
-import { eventoDelMesMessageBuilder, addedMessage, newMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder, lastEventoDelMesRankingBuilder } from './utils/messages';
-import { getCurrentMonthAndYear, getCurrentYear, getLastMonthAndYear } from './utils/utils';
+import { findTopLesbianBiographyContributors, getCurrentEventoDelMesInfo, getEventoParticipantInfo, getLastEventoDelMesInfo, getYesterdaysPagesAndCreators, rankEditors } from './services/mediawiki-service';
+import { eventoDelMesMessageBuilder, addedMessage, newMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder, lastEventoDelMesRankingBuilder, announceYesterdaysCreators } from './utils/messages';
+import { getCurrentMonthAndYear, getLastMonthAndYear } from './utils/utils';
 import { Mes } from './types/bot-types';
-import { adaptToMarkdownV2 } from './utils/parsing';
 
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const token = config.token;
@@ -75,13 +74,15 @@ const scheduleMessages = () => {
         }
     });
 
-    // Schedule test message every 300 minutes
-    const tenMinuteCronExpression = '0 20 * * *'; // Everyday
-    cron.schedule(tenMinuteCronExpression, () => {
+    // Schedule test message everyday
+    const dailyCronExpression = '0 20 * * *'; // Everyday
+    cron.schedule(dailyCronExpression, async () => {
         try {
-            const message = adaptToMarkdownV2('🔔 Esto es una prueba de mensaje automatizado diario.');
+            const yesterdaysArticles = await (getYesterdaysPagesAndCreators());
+            const message = announceYesterdaysCreators(yesterdaysArticles);
+
             broadcastMessage(message, standardMV2Options);
-            console.log('✅ Test message sent:', message);
+            console.log("✅ Yesterdays' creators sent");
         } catch (error) {
             console.error('❌ Something went wrong')
         }
@@ -142,6 +143,11 @@ bot.on('message', async (msg) => {
 
         console.log('✅ Sent out last Evento del Mes ranking');
 
+    }
+
+    if (messageText == '/prueba') {
+        const yesterdaysArticles = await (getYesterdaysPagesAndCreators());
+        bot.sendMessage(chatId, announceYesterdaysCreators(yesterdaysArticles), standardMV2Options);
     }
 
 })
