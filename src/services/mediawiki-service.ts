@@ -1,5 +1,5 @@
 import { Article, EventoDelMesInfo, EventoDelMesRanking, LesbianArticleContribution, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
-import { MediawikiParams } from "../types/mediawiki-types";
+import { ArticleObject, MediawikiParams } from "../types/mediawiki-types";
 import { currentMonth, currentYear, getLastMonthAndYear, removeBrackets, titleCase } from "../utils/utils";
 
 const headers = new Headers({
@@ -39,6 +39,44 @@ export async function getWikipediaPageContent(pageTitle: string): Promise<string
         console.error('An error occurred:', error.message);
         return `An error occurred: ${error.message}`;
     }
+}
+
+export async function getPageCreator(page: string): Promise<string | null> {
+    let callUrl = "https://es.wikipedia.org/w/api.php?origin=*";
+
+    const params: MediawikiParams = {
+        action: 'query',
+        prop: 'revisions',
+        titles: page,
+        rvprop: 'user',
+        rvdir: 'newer',
+        format: 'json',
+        rvlimit: 1,
+    }
+
+    for (let param in params) {
+        callUrl += `&${param}=${params[param]}`;
+    }
+
+    try {
+        const response = await fetch(callUrl, {
+            method: 'GET',
+            headers: headers
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        const pages = data.query.pages;
+        for (let p in pages) {
+            return pages[p].revisions[0].user;
+        }
+    } catch (error: any) {
+        console.error('An error occurred:', error.message);
+        return `An error occurred: ${error.message}`;
+    }
+
+    return null;
 }
 
 function extractEventoDelMesTableByYear(content: string, year: string): string | null {
@@ -229,4 +267,79 @@ export function findTopLesbianBiographyContributors(eventoDelMesInfo: EventoDelM
     }
 
     return topContributors.length > 0 ? topContributors : null;
+}
+
+export async function getArticlesForCurrentYear(): Promise<ArticleObject[]> {
+    // Get the current year dynamically
+    const currentYear = new Date().getFullYear();
+
+    // Pattern to match the block corresponding to the current year
+    const yearBlockPattern = new RegExp(
+        `\\{\\{Plegable[^}]*?\\|título\\s*=\\s*${currentYear}[^}]*?\\|contenido\\s*=\\s*(<div.*?>[\\s\\S]*?<\\/div>)`,
+        "i"
+    );
+
+    const inputText: string = await getWikipediaPageContent('Wikiproyecto:LGBT/Artículos creados');
+
+    // Extract the block for the current year
+    const yearBlockMatch = inputText.match(yearBlockPattern);
+    if (!yearBlockMatch || yearBlockMatch.length < 2) {
+        return [];
+    }
+    const yearBlock = yearBlockMatch[1];
+
+    // Pattern to extract each article and its creation date
+    const articlePattern = /# \[\[([^\]]+)\]\] \{\{small\|\(([^)]+)\)\}\}/g;
+
+    const articles: ArticleObject[] = [];
+    let match: RegExpExecArray | null;
+
+    // Extract articles and their creation dates
+    while ((match = articlePattern.exec(yearBlock)) !== null) {
+        const article = match[1].trim();
+        const creationDate = match[2].trim();
+        articles.push({ article: article, creationDate: creationDate }); // Push object to array
+    }
+
+    return articles;
+}
+
+function getArticlesForYesterday(articles: ArticleObject[]): ArticleObject[] {
+    // Get yesterday's date
+    const now = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+
+    // Format yesterday's date as 'd de mes'
+    const day = yesterday.getDate();
+    const month = yesterday.toLocaleString("es-ES", { month: "long" }); // Spanish month name
+    const formattedDate = `${day} de ${month}`;
+
+    // Filter articles matching yesterday's date
+    return articles.filter(article => article.creationDate === formattedDate);
+}
+
+async function addCreatorsToArticles(articles: ArticleObject[]): Promise<ArticleObject[]> {
+    // Create a new array with creator added to each article
+    const updatedArticles: ArticleObject[] = [];
+
+    for (const article of articles) {
+        try {
+            const creator = await getPageCreator(article.article);
+            updatedArticles.push({ ...article, creator });
+        } catch (error) {
+            console.error(`Error fetching creator for page "${article.article}":`, error);
+            updatedArticles.push({ ...article, creator: "Unknown" });
+        }
+    }
+
+    return updatedArticles;
+}
+
+export async function getYesterdaysPagesAndCreators(): Promise<ArticleObject[]> {
+    const allPages = await getArticlesForCurrentYear();
+    const yesterdaysArticles = getArticlesForYesterday(allPages);
+    const articlesWithCreators = await addCreatorsToArticles(yesterdaysArticles);
+
+    return articlesWithCreators
 }
