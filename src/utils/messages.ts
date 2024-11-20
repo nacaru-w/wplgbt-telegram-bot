@@ -1,6 +1,7 @@
 import { currentYear, currentMonth, getCountryOnISO, getLastMonthAndYear } from "./utils";
 import { adaptToMarkdownV2 } from "./parsing";
 import { EventoDelMesInfo, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
+import { ArticleObject } from "../types/mediawiki-types";
 
 export const startMessage = adaptToMarkdownV2(
     `
@@ -172,4 +173,23 @@ En total, se crearon o mejoraron __${totalArticles} artículos__.
     }
 
     return adaptToMarkdownV2(finalString);
+}
+
+export function announceYesterdaysCreators(yesterdaysArticles: ArticleObject[]): string {
+    let list = '';
+    for (let article of yesterdaysArticles) {
+        list += `· *[${article.article}](https://es.wikipedia.org/wiki/${article.article})*, de *${article.creator}*\n`
+    }
+
+    const message = `
+¡Hola!🤖
+
+Vengo aquí para anunciar los artículos que se crearon en el día de ayer. ¿Estáis nervioses? 😰 yo no, por que soy un bot y no siento emociones. En fin, que aquí está la lista:
+
+${list ? list : 'Pues... no hay lista porque nadie hizo nada ayer 😑 ¿no os da vergüencita?\n'}
+Nada más por ahora. ${list ? 'Un besete 🌺' : 'Un besete... supongo 🥀'}
+    `
+
+    return adaptToMarkdownV2(message);
+
 }
