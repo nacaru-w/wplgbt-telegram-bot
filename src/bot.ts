@@ -145,7 +145,7 @@ bot.on('message', async (msg) => {
 
     }
 
-    if (messageText == '/prueba') {
+    if (messageText == '/artículosayer' || messageText == '/articulosayer' || messageText == '/articulosayer@wikiproyectolgbtbot' || messageText == '/artículosayer@wikiproyectolgbtbot') {
         const yesterdaysArticles = await (getYesterdaysPagesAndCreators());
         bot.sendMessage(chatId, announceYesterdaysCreators(yesterdaysArticles), standardMV2Options);
     }

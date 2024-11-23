@@ -74,3 +74,36 @@ export function adaptToMarkdownV2(input: string): string {
 
     return escapedString;
 }
+
+export function adaptLinkToURL(input: string): string {
+    if (!input) return ""; // Handle null or undefined input
+
+    // Mapping of problematic characters to their percent-encoded equivalents
+    const replacements: { [key: string]: string } = {
+        "(": "%28",
+        ")": "%29",
+        "[": "%5B",
+        "]": "%5D",
+        "{": "%7B",
+        "}": "%7D",
+        "<": "%3C",
+        ">": "%3E",
+        "#": "%23",
+        "+": "%2B",
+        "%": "%25",
+        " ": "%20" // Optional: Encode spaces as %20
+    };
+
+    // Use a regular expression to replace all problematic characters
+    return input.replace(
+        /[()\[\]{}<>#%+ ]/g,
+        (match) => replacements[match] || match
+    );
+}
+
+export function escapeParenthesis(input: string): string {
+    if (!input) return ""; // Handle null or undefined input
+
+    // Escape parentheses by adding a backslash before each '(' or ')'
+    return input.replace(/[()]/g, (match) => `\\${match}`);
+}
