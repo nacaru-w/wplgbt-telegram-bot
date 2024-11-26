@@ -107,3 +107,7 @@ export function escapeParenthesis(input: string): string {
     // Escape parentheses by adding a backslash before each '(' or ')'
     return input.replace(/[()]/g, (match) => `\\${match}`);
 }
+
+export function escapeUnderscores(word: string): string {
+    return word.replace(/_/g, "\\_");
+}
