@@ -1,5 +1,6 @@
 import { Article, EventoDelMesInfo, EventoDelMesRanking, LesbianArticleContribution, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
 import { ArticleObject, MediawikiParams } from "../types/mediawiki-types";
+import { adaptLinkToURL } from "../utils/parsing";
 import { currentMonth, currentYear, getLastMonthAndYear, removeBrackets, titleCase } from "../utils/utils";
 
 const headers = new Headers({
@@ -168,7 +169,7 @@ async function extractEventoParticipantInfoFromTable(text: string): Promise<Even
     while ((match = rowRegex.exec(sectionText)) !== null) {
         const [, , title, , username] = match;
 
-        const cleanTitle = title.trim();
+        const cleanTitle = adaptLinkToURL(title.trim());
 
         // Fetch the content of the article
         const articleContent = await getWikipediaPageContent(cleanTitle);
@@ -179,7 +180,7 @@ async function extractEventoParticipantInfoFromTable(text: string): Promise<Even
 
         // Create the article object
         const article: Article = {
-            title: cleanTitle,
+            title: title.trim(),
             characters,
             lesbian,
         };

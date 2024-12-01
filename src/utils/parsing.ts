@@ -91,12 +91,13 @@ export function adaptLinkToURL(input: string): string {
         "#": "%23",
         "+": "%2B",
         "%": "%25",
-        " ": "%20" // Optional: Encode spaces as %20
+        "&": "%26",
+        " ": "%20"
     };
 
     // Use a regular expression to replace all problematic characters
     return input.replace(
-        /[()\[\]{}<>#%+ ]/g,
+        /[()\[\]{}<>#%+& ]/g,
         (match) => replacements[match] || match
     );
 }
