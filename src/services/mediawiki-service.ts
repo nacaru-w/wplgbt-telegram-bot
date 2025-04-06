@@ -141,7 +141,7 @@ export async function getLastEventoDelMesInfo(): Promise<EventoDelMesInfo> {
 }
 
 export async function getEventoParticipantInfo(month: string, year: string): Promise<EventoDelMesRanking[]> {
-    const wikiPage: string = `Wikiproyecto:LGBT/País del mes/${titleCase(month)}/${year}`;
+    const wikiPage: string = `Wikiproyecto:LGBT/Evento del mes/${titleCase(month)}/${year}`;
     const pageContent = await getWikipediaPageContent(wikiPage);
     return extractEventoParticipantInfoFromTable(pageContent);
 }
