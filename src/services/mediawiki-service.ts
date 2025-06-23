@@ -290,7 +290,7 @@ export async function getArticlesForCurrentYear(): Promise<ArticleObject[]> {
     const yearBlock = yearBlockMatch[1];
 
     // Pattern to extract each article and its creation date
-    const articlePattern = /# \[\[([^\]]+)\]\] \{\{small\|\(([^)]+)\)\}\}/g;
+    const articlePattern = /# \[\[([^\]]+)\]\]\s+\{\{small\|\(([^)]+)\)\}\}/g;
 
     const articles: ArticleObject[] = [];
     let match: RegExpExecArray | null;
