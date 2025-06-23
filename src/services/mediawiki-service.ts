@@ -74,7 +74,6 @@ export async function getPageCreator(page: string): Promise<string | null> {
         }
     } catch (error: any) {
         console.error('An error occurred:', error.message);
-        return `An error occurred: ${error.message}`;
     }
 
     return null;

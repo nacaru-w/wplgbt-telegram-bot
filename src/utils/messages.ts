@@ -1,5 +1,5 @@
 import { currentYear, currentMonth, getCountryOnISO, getLastMonthAndYear } from "./utils";
-import { adaptLinkToURL, adaptToMarkdownV2, escapeParenthesis, escapeUnderscores } from "./parsing";
+import { adaptLinkToURL, adaptToMarkdownV2, escapeSymbols, escapeUnderscores } from "./parsing";
 import { EventoDelMesInfo, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
 import { ArticleObject } from "../types/mediawiki-types";
 
@@ -178,7 +178,11 @@ En total, se crearon o mejoraron __${totalArticles} artículos__.
 export function announceYesterdaysCreators(yesterdaysArticles: ArticleObject[]): string {
     let list = '';
     for (let article of yesterdaysArticles) {
-        list += `· *[${escapeParenthesis(article.article)}](https://es.wikipedia.org/wiki/${adaptLinkToURL(article.article)})*, de *${article.creator}*\n`
+        if (article.creator) {
+            list += `· *[${escapeSymbols(article.article)}](https://es.wikipedia.org/wiki/${adaptLinkToURL(article.article)})*, de *${article.creator}*\n`
+        } else {
+            list += `· ~*[${escapeSymbols(article.article)}](https://es.wikipedia.org/wiki/${adaptLinkToURL(article.article)})*~ \(_artículo borrado_\) \n`
+        }
     }
 
     const message = `
@@ -189,7 +193,7 @@ Vengo aquí para anunciar los artículos que se crearon en el día de ayer. ¿Es
 ${list ? list : 'Pues... no hay lista porque nadie hizo nada ayer 😑 ¿no os da vergüencita?\n'}
 Nada más por ahora. ${list ? 'Un besete 🌺' : 'Un besete... supongo 🥀'}
     `
-
+    console.log(adaptToMarkdownV2(message))
     return adaptToMarkdownV2(message);
 
 }

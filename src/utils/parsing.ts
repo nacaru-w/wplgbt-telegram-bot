@@ -92,23 +92,38 @@ export function adaptLinkToURL(input: string): string {
         "+": "%2B",
         "%": "%25",
         "&": "%26",
-        " ": "%20"
+        " ": "%20",
+        "!": "%21"
     };
 
     // Use a regular expression to replace all problematic characters
     return input.replace(
-        /[()\[\]{}<>#%+& ]/g,
+        /[()\[\]{}<>#%+& !]/g,
         (match) => replacements[match] || match
     );
 }
 
-export function escapeParenthesis(input: string): string {
+export function escapeSymbols(input: string): string {
     if (!input) return ""; // Handle null or undefined input
 
     // Escape parentheses by adding a backslash before each '(' or ')'
-    return input.replace(/[()]/g, (match) => `\\${match}`);
+    return input.replace(/[()!]/g, (match) => `\\${match}`);
+}
+
+
+/**
+ * Escapes exclamation marks (!) by prefixing them with a backslash.
+ */
+export function escapeExclamation(input: string): string {
+    if (!input) return "";
+    return input.replace(/!/g, (match) => `\\${match}`);
 }
 
 export function escapeUnderscores(word: string): string {
     return word.replace(/_/g, "\\_");
+}
+
+export function removeExclamationMarks(input: string): string {
+    if (!input) return "";
+    return input.replace(/!/g, "");
 }
