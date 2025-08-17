@@ -1,3 +1,5 @@
+
+
 export function adaptToMarkdownV2(input: string): string {
     const specialCharacters = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'];
     let escapedString = '';
@@ -20,7 +22,11 @@ export function adaptToMarkdownV2(input: string): string {
                 // Escape special characters in the link text
                 while (i < endLinkTextIndex) {
                     if (isSpecialCharacter(input[i])) {
-                        escapedString += '\\' + input[i];
+                        if (i > 0 && input[i - 1] === '\\') {
+                            escapedString += input[i];
+                        } else {
+                            escapedString += '\\' + input[i];
+                        }
                     } else {
                         escapedString += input[i];
                     }
@@ -65,7 +71,11 @@ export function adaptToMarkdownV2(input: string): string {
 
         // Escape special characters outside markdown links and formatting
         if (isSpecialCharacter(input[i])) {
-            escapedString += '\\' + input[i];
+            if (i > 0 && input[i - 1] === '\\') {
+                escapedString += input[i]; // already escaped
+            } else {
+                escapedString += '\\' + input[i];
+            }
         } else {
             escapedString += input[i];
         }
@@ -74,6 +84,7 @@ export function adaptToMarkdownV2(input: string): string {
 
     return escapedString;
 }
+
 
 export function adaptLinkToURL(input: string): string {
     if (!input) return ""; // Handle null or undefined input

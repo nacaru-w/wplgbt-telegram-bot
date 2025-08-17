@@ -170,9 +170,9 @@ bot.on('new_chat_members', (msg) => {
 
     if (newMembers) {
         if (!newMembers[0].is_bot) {
-            const newMember = newMembers[0]
-            console.log(`❗ Greeting new member that was added to group ${chatTitle}`);
-            bot.sendMessage(chatId, newMemberMessageBuilder(newMember.username || 'usuarie'), standardMV2Options)
+            const newMember = newMembers[0].username
+            console.log(`❗ Greeting new member ${newMember} that was added to group ${chatTitle}`);
+            bot.sendMessage(chatId, newMemberMessageBuilder(newMember || 'usuarie'), standardMV2Options)
         }
     }
 

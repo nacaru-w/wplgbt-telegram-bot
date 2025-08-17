@@ -30,19 +30,17 @@ Ahora mismo mis funciones son las siguientes:
 `);
 
 export function newMemberMessageBuilder(newMember: string): string {
-    const finalString =
-        `
-¡Hola, @${escapeUnderscores(newMember)}! Te doy la bienvenida al grupo de Telegram del *[WikiProyecto LGBT\\+](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT)*.
+    const finalMessage = '¡Hola, ' + (newMember !== 'usuarie' ? '@' : '') + escapeUnderscores(newMember) + ', ' + adaptToMarkdownV2(`te doy la bienvenida al grupo de Telegram del *[WikiProyecto LGBT\\+](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT)*.
 
 · Recuerda presentarte al grupo: indica tus pronombres y otros detalles sobre cómo quieres que nos refiramos a ti.
 · Indica tu _username_ en los proyectos Wikimedia.
 · Para asegurarnos de que el grupo es un espacio seguro para las personas que lo integran, evita enviar o difundir los temas de conversación que se hablen aquí.
 · Ten en cuenta que este grupo sigue la [política de espacios amigables](https://meta.wikimedia.org/wiki/Friendly_space_policies/es) y el [Código Universal de Conducta](https://meta.wikimedia.org/wiki/Universal_Code_of_Conduct/es).
 
-¡Espero que disfrutes de tu paso por aquí! ¡Nos vemos 🤖! 
-`;
+¡Espero que disfrutes de tu paso por aquí! ¡Nos vemos! 🤖 
+`);
 
-    return adaptToMarkdownV2(finalString);
+    return finalMessage;
 
 };
 
@@ -193,7 +191,6 @@ Vengo aquí para anunciar los artículos que se crearon en el día de ayer. ¿Es
 ${list ? list : 'Pues... no hay lista porque nadie hizo nada ayer 😑 ¿no os da vergüencita?\n'}
 Nada más por ahora. ${list ? 'Un besete 🌺' : 'Un besete... supongo 🥀'}
     `
-    console.log(adaptToMarkdownV2(message))
     return adaptToMarkdownV2(message);
 
 }
