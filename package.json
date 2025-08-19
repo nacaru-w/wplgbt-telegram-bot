@@ -7,7 +7,8 @@
     "test": "test",
     "compile": "rm -rf dist && tsc",
     "start": "node dist/bot.js",
-    "bot": "node dist/bot.js"
+    "bot": "node dist/bot.js",
+    "run-background": "npm run bot >> logs.txt 2>&1 &"
   },
   "repository": {
     "type": "git",
