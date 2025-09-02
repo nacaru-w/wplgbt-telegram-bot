@@ -118,7 +118,7 @@ export function escapeSymbols(input: string): string {
     if (!input) return ""; // Handle null or undefined input
 
     // Escape parentheses by adding a backslash before each '(' or ')'
-    return input.replace(/[()!.]/g, (match) => `\\${match}`);
+    return input.replace(/[()!.-]/g, (match) => `\\${match}`);
 }
 
 
