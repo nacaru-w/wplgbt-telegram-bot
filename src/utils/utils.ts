@@ -65,7 +65,3 @@ export function titleCase(word: string): string {
 
 export const currentYear: string = getCurrentYear();
 export const currentMonth: Mes = getCurrentMonthAndYear().month;
-
-function indexof(mes: string) {
-    throw new Error("Function not implemented.");
-}
