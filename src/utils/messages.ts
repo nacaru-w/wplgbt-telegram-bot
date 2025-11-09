@@ -1,4 +1,4 @@
-import { currentYear, currentMonth, getCountryOnISO, getLastMonthAndYear } from "./utils";
+import { getCountryOnISO, getCurrentMonthAndYear, getCurrentYear, getLastMonthAndYear } from "./utils";
 import { adaptLinkToURL, adaptToMarkdownV2, escapeSymbols, escapeUnderscores } from "./parsing";
 import { EventoDelMesInfo, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
 import { ArticleObject } from "../types/mediawiki-types";
@@ -60,10 +60,10 @@ export function eventoDelMesMessageBuilder(info: EventoDelMesInfo, addIntro: boo
     const finalString =
         `
 ${addIntro ? '🗓️ ¡Hola a todo el mundo! Paso por aquí para recordaros que ya está en marcha el nuevo *[Evento del Mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes)*.\n' : ''}En este mes de ${info.month?.toLowerCase() || '...uh creo que olvidé el mes...'} celebramos el *${country ? `mes de ${country} ${flag}` : `evento del ${event}`}*:
-· Más información sobre el evento en *[su página en Wikipedia](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${currentYear}/${info.month})*.
+· Más información sobre el evento en *[su página en Wikipedia](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${info.month})*.
 · Para ver la lista de artículos sugeridos consulta *[esta página](${country ?
             `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Solicitados/Pa%C3%ADses/${country}` :
-            `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${currentYear}/${currentMonth}#Art%C3%ADculos_sugeridos`
+            `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${getCurrentMonthAndYear().month}#Art%C3%ADculos_sugeridos`
         })*.
 `
 
@@ -96,7 +96,7 @@ export function eventoDelMesRankingMessageBuilder(
 
     // Build the final string with top lesbian contributor
     let finalString = `
-En este *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${currentYear}/${currentMonth}) de${country ? '' : 'l'} ${country ? countryString : countryInfo.event}*, la clasificación actual es la siguiente:
+En este *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${getCurrentMonthAndYear().month})}) de${country ? '' : 'l'} ${country ? countryString : countryInfo.event}*, la clasificación actual es la siguiente:
 ${rankingString}
 Han participado un total de __${participantCount} personas__. ${participantCount < 3 ? `Eso son pocas personas 😔, ¿por qué no te animas a participar?` : 'Si aún no te has animado a participar, ¡hazlo para aumentar ese número!'} 
 En total, se han creado o mejorado __${totalArticles} artículos__.

@@ -1,7 +1,7 @@
-import { Article, EventoDelMesInfo, EventoDelMesRanking, LesbianArticleContribution, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
+import { Article, EventoDelMesInfo, EventoDelMesRanking, LesbianArticleContribution, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
 import { ArticleObject, MediawikiParams } from "../types/mediawiki-types";
 import { adaptLinkToURL } from "../utils/parsing";
-import { currentMonth, currentYear, getLastMonthAndYear, removeBrackets, titleCase } from "../utils/utils";
+import { getCurrentMonthAndYear, getCurrentYear, getLastMonthAndYear, removeBrackets, titleCase } from "../utils/utils";
 
 const headers = new Headers({
     'Content-Type': 'application/json',
@@ -113,11 +113,11 @@ export async function getCurrentEventoDelMesInfo(): Promise<EventoDelMesInfo> {
     const wikiPage: string = "Wikiproyecto:LGBT/Evento del mes";
 
     const pageContent = await getWikipediaPageContent(wikiPage);
-    const event = findEventForGivenTime(pageContent, currentYear, currentMonth)
+    const event = findEventForGivenTime(pageContent, getCurrentYear(), getCurrentMonthAndYear().month)
 
     const eventObj = {
         event: removeBrackets(event),
-        month: currentMonth
+        month: getCurrentMonthAndYear().month
     }
 
     return eventObj;
