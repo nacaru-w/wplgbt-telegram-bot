@@ -1,0 +1,10 @@
+services:
+   lgbt-telegram-bot:
+     build: .
+     user: "100000"
+     restart: unless-stopped
+     deploy:
+       resources:
+         limits:
+           cpus: 0.8
+           memory: 400M
