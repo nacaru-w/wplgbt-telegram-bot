@@ -22,7 +22,7 @@ export const countryISOCodes: CountryISOCodes = {
     "PER": { country: "Perú", flag: "🇵🇪" },
     "URY": { country: "Uruguay", flag: "🇺🇾" },
     "VEN": { country: "Venezuela", flag: "🇻🇪" },
-    "PIR": { country: "Puerto Rico", flag: "🇵🇷" },
+    "PRI": { country: "Puerto Rico", flag: "🇵🇷" },
 
     // Europe
     "ALB": { country: "Albania", flag: "🇦🇱" },
