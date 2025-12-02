@@ -121,6 +121,7 @@ bot.on('message', async (msg) => {
         const currentEventoInfo = await getCurrentEventoDelMesInfo();
 
         const rankingMessage = eventoDelMesRankingMessageBuilder(rankedEditors, lesbianContributor, currentEventoInfo)
+        console.log("MENSAJEEEEEEE QUE FALLA", rankingMessage)
         bot.sendMessage(chatId, rankingMessage, standardMV2Options)
         console.log('✅ Sent out Evento del Mes ranking');
     }
