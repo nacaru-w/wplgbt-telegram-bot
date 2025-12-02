@@ -96,7 +96,7 @@ export function eventoDelMesRankingMessageBuilder(
 
     // Build the final string with top lesbian contributor
     let finalString = `
-En este *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${getCurrentMonthAndYear().month})}) de${country ? '' : 'l'} ${country ? countryString : countryInfo.event}*, la clasificación actual es la siguiente:
+En este *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${getCurrentMonthAndYear().month}) de${country ? '' : 'l'} ${country ? countryString : countryInfo.event}*, la clasificación actual es la siguiente:
 ${rankingString}
 Han participado un total de __${participantCount} personas__. ${participantCount < 3 ? `Eso son pocas personas 😔, ¿por qué no te animas a participar?` : 'Si aún no te has animado a participar, ¡hazlo para aumentar ese número!'} 
 En total, se han creado o mejorado __${totalArticles} artículos__.
