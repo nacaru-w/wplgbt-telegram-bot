@@ -177,7 +177,7 @@ export function announceYesterdaysCreators(yesterdaysArticles: ArticleObject[]):
     let list = '';
     for (let article of yesterdaysArticles) {
         if (article.creator) {
-            list += `· *[${escapeSymbols(article.article)}](https://es.wikipedia.org/wiki/${adaptLinkToURL(article.article)})*, de *${article.creator}*\n`
+            list += `· *[${escapeSymbols(article.article)}](https://es.wikipedia.org/wiki/${adaptLinkToURL(article.article)})*, de *${escapeSymbols(article.creator)}*\n`
         } else {
             list += `· ~*[${escapeSymbols(article.article)}](https://es.wikipedia.org/wiki/${adaptLinkToURL(article.article)})*~ \(_artículo borrado_\) \n`
         }
