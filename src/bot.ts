@@ -74,18 +74,6 @@ const scheduleMessages = () => {
         }
     });
 
-    const testCronExpression = '10 10 * * *'; // At 10:59 every day
-    cron.schedule(testCronExpression, async () => {
-        console.log("Este es un mensaje de prueba 😊")
-        try {
-            broadcastMessage("Este es un mensaje de prueba 😊", standardMV2Options)
-        } catch (error) {
-            console.error("cronjob de prueba ha fallado", error)
-        }
-    })
-
-
-    // Schedule test message everyday
     const dailyCronExpression = '0 20 * * *'; // Everyday at 20:00
     cron.schedule(dailyCronExpression, async () => {
         try {
