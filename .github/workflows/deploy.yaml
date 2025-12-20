@@ -1,0 +1,51 @@
+name: Trigger Deployment
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  TAILSCALE_TIMEOUT: 30
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # See https://github.com/simonw/til/blob/main/tailscale/tailscale-github-actions.md
+    # for more details on Tailscale setup in GitHub Actions
+    - name: Connect to Tailscale
+      uses: tailscale/github-action@v3
+      with:
+        oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+        tags: tag:github-actions
+        use-cache: 'true'
+        version: latest
+
+    - name: Wait for Tailscale connection
+      run: |
+        echo "Waiting for Tailscale to establish connection..."
+        sleep 10
+        tailscale status
+    
+    - name: Trigger deployment
+      run: |
+        DEPLOY_TOKEN="${{ secrets.DEPLOY_TOKEN }}"
+        RESPONSE=$(curl -o response.txt -w "%{http_code}" -X POST \
+          "http://private.codu.al:1679/api/deploy" \
+          -H "Authorization: Bearer $DEPLOY_TOKEN")
+        cat response.txt
+        if [ "$RESPONSE" -ne 200 ]; then
+          echo "Deployment request failed with status code $RESPONSE"
+          exit 1
+        fi
+        echo "Deployment triggered successfully."
