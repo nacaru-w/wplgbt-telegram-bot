@@ -35,7 +35,6 @@ jobs:
       run: |
         echo "Waiting for Tailscale to establish connection..."
         sleep 10
-        tailscale status
     
     - name: Trigger deployment
       run: |
