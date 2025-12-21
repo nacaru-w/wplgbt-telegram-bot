@@ -7,7 +7,7 @@ import fs from 'fs';
 import cron from 'node-cron';
 import { findTopLesbianBiographyContributors, getCurrentEventoDelMesInfo, getEventoParticipantInfo, getLastEventoDelMesInfo, getYesterdaysPagesAndCreators, rankEditors } from './services/mediawiki-service';
 import { eventoDelMesMessageBuilder, addedMessage, newMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder, lastEventoDelMesRankingBuilder, announceYesterdaysCreators } from './utils/messages';
-import { getCurrentMonthAndYear, getLastMonthAndYear } from './utils/utils';
+import { getCurrentMonthAndYear, getLastMonthAndYear, logAction } from './utils/utils';
 import { Mes } from './types/bot-types';
 
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
@@ -20,25 +20,25 @@ const legacyMarkdownOptions: SendMessageOptions = { 'parse_mode': 'Markdown', 'd
 let chatDictionary: { group: string, chatId: number }[] = [];
 
 function fetchData() {
-    console.log('⌛ Fetching chat data...')
+    logAction('⌛ Fetching chat data...')
     if (fs.existsSync(jsonFilePath)) {
         const data = fs.readFileSync(jsonFilePath, 'utf-8')
         chatDictionary = JSON.parse(data)
-        console.log('✅ Fetched chat data!')
+        logAction('✅ Fetched chat data!')
     }
 }
 
 function saveData(data: { group: string, chatId: number }): void {
-    console.log('⌛ Updating chat data...');
+    logAction('⌛ Updating chat data...');
     for (let o of chatDictionary) {
         if (data.chatId == o.chatId) {
-            console.log('❌ Group is already part of the list');
+            logAction('❌ Group is already part of the list');
             return
         }
     }
     chatDictionary.push(data);
     fs.writeFileSync(jsonFilePath, JSON.stringify(chatDictionary, null, 2), 'utf-8');
-    console.log('✅ Chat data was successfully updated!')
+    logAction('✅ Chat data was successfully updated!');
 }
 
 function broadcastMessage(message: string, options: SendMessageOptions) {
@@ -49,7 +49,7 @@ function broadcastMessage(message: string, options: SendMessageOptions) {
 }
 
 const scheduleMessages = () => {
-    console.log('⏰ Running scheduled messages...')
+    logAction('⏰ Running scheduled messages...')
     for (let day in LGBTDaysDictionary) {
         const event = LGBTDaysDictionary[day];
         event.days.forEach((dayOfMonth: number) => {
@@ -57,7 +57,7 @@ const scheduleMessages = () => {
             cron.schedule(cronExpression, () => {
                 const message = `🌈¡Hoy es ${LGBTDaysDictionary[day].days.length > 1 ? 'la' : 'el'} ${day}!🌈\n[Más información en su artículo de Wikipedia](https://es.wikipedia.org/wiki/${encodeURIComponent(day)})!`
                 broadcastMessage(message, legacyMarkdownOptions);
-                console.log('✅ Scheduled message sent:', message)
+                logAction(`✅ Scheduled ${day} message sent`)
             })
         })
     }
@@ -68,9 +68,9 @@ const scheduleMessages = () => {
             const res = await getCurrentEventoDelMesInfo();
             const message = eventoDelMesMessageBuilder(res, true);
             broadcastMessage(message, standardMV2Options);
-            console.log('✅ Scheduled monthly message sent:');
+            logAction('✅ Scheduled monthly message sent');
         } catch (error) {
-            console.error('❌ Failed to send scheduled monthly message:', error);
+            logAction('❌ Failed to send scheduled monthly message:', error);
         }
     });
 
@@ -81,7 +81,7 @@ const scheduleMessages = () => {
             const message = announceYesterdaysCreators(yesterdaysArticles);
 
             broadcastMessage(message, standardMV2Options);
-            console.log("✅ Yesterdays' creators sent");
+            logAction("✅ Yesterdays' creators sent");
         } catch (error) {
             console.error('❌ Something went wrong', error)
         }
@@ -97,18 +97,18 @@ bot.on('message', async (msg) => {
 
     if (messageText == '/start' || messageText == '/start@wikiproyectolgbtbot') {
         bot.sendMessage(chatId, startMessage, standardMV2Options);
-        console.log('✅ Start message sent');
+        logAction('✅ Start message sent');
     }
 
     if (messageText == '/help' || messageText == '/help@wikiproyectolgbtbot') {
         bot.sendMessage(chatId, helpMessage, standardMV2Options);
-        console.log('✅ Help message sent');
+        logAction('✅ Help message sent');
     }
 
     if (messageText == '/eventodelmes' || messageText == '/eventodelmes@wikiproyectolgbtbot') {
         const res = await getCurrentEventoDelMesInfo();
         bot.sendMessage(chatId, eventoDelMesMessageBuilder(res, true), standardMV2Options);
-        console.log('✅ Evento del mes response sent');
+        logAction('✅ Evento del mes response sent');
     }
 
     if (messageText == '/eventodelmesranking' || messageText == '/eventodelmesranking@wikiproyectolgbtbot') {
@@ -121,7 +121,7 @@ bot.on('message', async (msg) => {
 
         const rankingMessage = eventoDelMesRankingMessageBuilder(rankedEditors, lesbianContributor, currentEventoInfo)
         bot.sendMessage(chatId, rankingMessage, standardMV2Options)
-        console.log('✅ Sent out Evento del Mes ranking');
+        logAction('✅ Sent out Evento del Mes ranking');
     }
 
     if (messageText == '/eventodelmesrankingpasado' || messageText == '/eventodelmesrankingpasado@wikiproyectolgbtbot') {
@@ -140,7 +140,7 @@ bot.on('message', async (msg) => {
 
         bot.sendMessage(chatId, lastRankingMessage, standardMV2Options);
 
-        console.log('✅ Sent out last Evento del Mes ranking');
+        logAction('✅ Sent out last Evento del Mes ranking');
 
     }
 
@@ -155,7 +155,7 @@ bot.on('my_chat_member', (msg) => {
     const chatId = msg.chat.id;
     const chatTitle = msg.chat.title || 'untitled';
 
-    console.log(`🤖 Bot was added to group ${chatTitle}`)
+    logAction(`🤖 Bot was added to group ${chatTitle}`)
 
     saveData({ group: chatTitle, chatId: chatId });
 
@@ -170,7 +170,7 @@ bot.on('new_chat_members', (msg) => {
     if (newMembers) {
         if (!newMembers[0].is_bot) {
             const newMember = newMembers[0].username
-            console.log(`❗ Greeting new member ${newMember} that was added to group ${chatTitle}`);
+            logAction(`❗ Greeting new member ${newMember} that was added to group ${chatTitle}`);
             bot.sendMessage(chatId, newMemberMessageBuilder(newMember || 'usuarie'), standardMV2Options)
         }
     }

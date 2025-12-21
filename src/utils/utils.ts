@@ -62,3 +62,7 @@ export function removeBrackets(input: string | null): string | null {
 export function titleCase(word: string): string {
     return word[0].toUpperCase() + word.slice(1).toLowerCase();
 }
+
+export function logAction(message: string, ...args: unknown[]): void {
+    console.log(`[${new Date().toString()}] ${message}`, ...args);
+}
