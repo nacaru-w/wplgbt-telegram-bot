@@ -2,10 +2,11 @@ import { getCountryOnISO, getCurrentMonthAndYear, getCurrentYear, getLastMonthAn
 import { adaptLinkToURL, adaptToMarkdownV2, escapeSymbols, escapeUnderscores } from "./parsing";
 import { EventoDelMesInfo, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
 import { ArticleObject } from "../types/mediawiki-types";
+import pkg from "../../package.json"
 
 export const startMessage = adaptToMarkdownV2(
     `
-¡Este es el bot del WikiProyecto LGBT+!
+¡Este es el bot del WikiProyecto LGBT+! (versión ${pkg.version})
 · Usa /help para conocer las opciones de ayuda.
 · Añádeme a un grupo para que automáticamente avise de los días LGBT+
 · También saludaré a la gente nueva
