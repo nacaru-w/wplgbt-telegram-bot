@@ -9,7 +9,7 @@ const headers = new Headers({
     'User-Agent': 'wikiproyecto-lgbt-telegram-bot/1.0 (https://t.me/wikiproyectolgbtbot icasaresr@gmail.com) TypeScript'
 });
 
-export async function getWikipediaPageContent(pageTitle: string): Promise<string> {
+export async function getWikipediaPageContent(pageTitle: string): Promise<{ title: string, content: string }> {
     let callUrl = "https://es.wikipedia.org/w/api.php?origin=*";
 
     const params: MediawikiParams = {
@@ -18,6 +18,7 @@ export async function getWikipediaPageContent(pageTitle: string): Promise<string
         titles: pageTitle,
         rvprop: "content",
         rvslots: "main",
+        redirects: "1",
         formatversion: "2",
         format: "json"
     };
@@ -35,10 +36,16 @@ export async function getWikipediaPageContent(pageTitle: string): Promise<string
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        return data?.query?.pages[0]?.revisions[0]?.slots?.main?.content;
+        return {
+            title: data.query.pages[0].title,
+            content: data.query.pages[0].revisions[0].slots.main.content
+        }
     } catch (error: any) {
         console.error('An error occurred:', error.message);
-        return `An error occurred: ${error.message}`;
+        return {
+            title: pageTitle,
+            content: `An error occurred: ${error.message}`
+        }
     }
 }
 
@@ -113,7 +120,7 @@ export async function getCurrentEventoDelMesInfo(): Promise<EventoDelMesInfo> {
     const wikiPage: string = "Wikiproyecto:LGBT/Evento del mes";
 
     const pageContent = await getWikipediaPageContent(wikiPage);
-    const event = findEventForGivenTime(pageContent, getCurrentYear(), getCurrentMonthAndYear().month)
+    const event = findEventForGivenTime(pageContent.content, getCurrentYear(), getCurrentMonthAndYear().month)
 
     const eventObj = {
         event: removeBrackets(event),
@@ -128,7 +135,7 @@ export async function getLastEventoDelMesInfo(): Promise<EventoDelMesInfo> {
     const pageContent = await getWikipediaPageContent(wikiPage);
     const lastMonthAndYear = getLastMonthAndYear();
 
-    const event = findEventForGivenTime(pageContent, lastMonthAndYear.year, lastMonthAndYear.month);
+    const event = findEventForGivenTime(pageContent.content, lastMonthAndYear.year, lastMonthAndYear.month);
 
     const eventObj = {
         event: removeBrackets(event),
@@ -139,10 +146,14 @@ export async function getLastEventoDelMesInfo(): Promise<EventoDelMesInfo> {
 
 }
 
-export async function getEventoParticipantInfo(month: string, year: string): Promise<EventoDelMesRanking[]> {
-    const wikiPage: string = `Wikiproyecto:LGBT/Evento del mes/${titleCase(month)}/${year}`;
+export async function getEventoParticipantInfo(year: string, month: string): Promise<EventoDelMesRanking[]> {
+    const wikiPage: string = `Wikiproyecto:LGBT/Evento del mes/${titleCase(year)}/${titleCase(month)}`;
     const pageContent = await getWikipediaPageContent(wikiPage);
-    return extractEventoParticipantInfoFromTable(pageContent);
+    if (pageContent.title.startsWith('Evento:')) {
+        const eventoPageContent = await getWikipediaPageContent(`${pageContent.title}/Artículos_trabajados`);
+        return extractEventoParticipantInfoFromTable(eventoPageContent.content);
+    }
+    return extractEventoParticipantInfoFromTable(pageContent.content);
 }
 
 export function isLesbianArticle(articleContent: string): boolean {
@@ -154,10 +165,17 @@ async function extractEventoParticipantInfoFromTable(text: string): Promise<Even
     // Extract the "Artículos trabajados" section
     const sectionRegex = /=== Artículos trabajados ===([\s\S]*?)===/;
     const sectionMatch = sectionRegex.exec(text);
+    let sectionText = '';
+
     if (!sectionMatch) {
-        return [];
+        if (text.includes('Artículo !! Comentario y tamaño !! Wikidata !! Usuari@')) {
+            sectionText = text
+        } else {
+            return [];
+        }
+    } else {
+        sectionText = sectionMatch[1];
     }
-    const sectionText = sectionMatch[1];
 
     // Regular expression to match table rows in the "Artículos trabajados" section
     const rowRegex = /\|-\s*\n\|\s*(\d+)\s*\|\|\s*\[\[(.*?)\]\]\s*\|\|\s*(.*?)\s*\|\|\s*\{\{[^\|]+\|[^\}]+\}\}\s*\|\|\s*\{\{u\|([^\}]+)\}\}/g;
@@ -174,8 +192,8 @@ async function extractEventoParticipantInfoFromTable(text: string): Promise<Even
         const articleContent = await getWikipediaPageContent(cleanTitle);
 
         // Determine the number of characters and if the article is related to lesbian topics
-        const characters = articleContent.length;
-        const lesbian = isLesbianArticle(articleContent);
+        const characters = articleContent.content.length;
+        const lesbian = isLesbianArticle(articleContent.content);
 
         // Create the article object
         const article: Article = {
@@ -279,7 +297,7 @@ export async function getArticlesForCurrentYear(): Promise<ArticleObject[]> {
         "i"
     );
 
-    const inputText: string = await getWikipediaPageContent('Wikiproyecto:LGBT/Artículos creados');
+    const inputText: string = (await getWikipediaPageContent('Wikiproyecto:LGBT/Artículos creados')).content;
 
     // Extract the block for the current year
     const yearBlockMatch = inputText.match(yearBlockPattern);
