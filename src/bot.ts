@@ -14,29 +14,21 @@ const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const token = config.token;
 
 const jsonFilePath = './idData.json';
-const streakFilePath = './streak.json';
+
 const standardMV2Options: SendMessageOptions = { 'parse_mode': 'MarkdownV2', 'disable_web_page_preview': true }
 const legacyMarkdownOptions: SendMessageOptions = { 'parse_mode': 'Markdown', 'disable_web_page_preview': true }
 
 let chatDictionary: { group: string, chatId: number }[] = [];
-let streak: { streak: number } = { streak: 0 };
+let streak: number = 0;
 
 function fetchData() {
-    logAction('⌛ Fetching chat data...')
+    logAction('⌛ Fetching chat and streak data...')
     if (fs.existsSync(jsonFilePath)) {
         const data = fs.readFileSync(jsonFilePath, 'utf-8')
-        chatDictionary = JSON.parse(data)
-        logAction('✅ Fetched chat data!')
-    }
-    logAction('⌛ Fetching streak data...')
-    if (fs.existsSync(streakFilePath)) {
-        const streakData = fs.readFileSync(streakFilePath, 'utf-8');
-        streak = JSON.parse(streakData);
-        logAction('✅ Fetched streak data!');
-    } else {
-        // Create file with default value if it doesn't exist
-        fs.writeFileSync(streakFilePath, JSON.stringify(streak, null, 2), 'utf-8');
-        logAction('🆕 Created streak data file with defaults');
+        const parsedData: { groups: { group: string, chatId: number }[], streak: number } = JSON.parse(data)
+        chatDictionary = parsedData.groups;
+        streak = parsedData?.streak ?? 0;
+        logAction('✅ Fetched chat and streak data!')
     }
 }
 
@@ -49,14 +41,16 @@ function saveData(data: { group: string, chatId: number }): void {
         }
     }
     chatDictionary.push(data);
-    fs.writeFileSync(jsonFilePath, JSON.stringify(chatDictionary, null, 2), 'utf-8');
+    const idData = { groups: chatDictionary, streak };
+    fs.writeFileSync(jsonFilePath, JSON.stringify(idData, null, 2), 'utf-8');
     logAction('✅ Chat data was successfully updated!');
 }
 
 function saveStreak(newArticles: boolean) {
     logAction('⌛ Updating streak data...');
-    streak.streak = newArticles ? streak.streak + 1 : 0;
-    fs.writeFileSync(streakFilePath, JSON.stringify(streak), 'utf-8');
+    streak = newArticles ? (streak + 1) : 0;
+    const idData = { groups: chatDictionary, streak };
+    fs.writeFileSync(jsonFilePath, JSON.stringify(idData), 'utf-8');
     logAction('✅ Streak data was successfully updated!');
 }
 
@@ -97,10 +91,10 @@ const scheduleMessages = () => {
     cron.schedule(dailyCronExpression, async () => {
         try {
             const yesterdaysArticles = await (getYesterdaysPagesAndCreators());
-            const oldStreak = streak.streak;
+            const oldStreak = streak;
             saveStreak(!!yesterdaysArticles.length);
 
-            const newStreak = streak.streak;
+            const newStreak = streak;
             const message = announceYesterdaysCreators(yesterdaysArticles, { newStreak, oldStreak });
 
             broadcastMessage(message, standardMV2Options);
