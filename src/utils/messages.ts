@@ -174,7 +174,7 @@ En total, se crearon o mejoraron __${totalArticles} artículos__.
     return adaptToMarkdownV2(finalString);
 }
 
-export function announceYesterdaysCreators(yesterdaysArticles: ArticleObject[]): string {
+export function announceYesterdaysCreators(yesterdaysArticles: ArticleObject[], streak?: { oldStreak: number, newStreak: number }): string {
     let list = '';
     for (let article of yesterdaysArticles) {
         if (article.creator) {
@@ -184,12 +184,18 @@ export function announceYesterdaysCreators(yesterdaysArticles: ArticleObject[]):
         }
     }
 
+    let streakMessage = '';
+    if (streak) {
+        streakMessage = `${streak.newStreak ? `Son *${streak.newStreak}* días seguidos en los que se ha creado algún artículo!` : `Por tanto, la racha de ${streak.oldStreak} días se acabó aquí...`}\n`
+    }
+
     const message = `
 ¡Hola!🤖
 
 Vengo aquí para anunciar los artículos que se crearon en el día de ayer. ¿Estáis nervioses? 😰 yo no, porque soy un bot y no siento emociones. En fin, que aquí está la lista:
 
-${list ? list : 'Pues... no hay lista porque nadie hizo nada ayer 😑 ¿no os da vergüencita?\n'}
+${list ? list : 'Pues... no hay lista porque nadie hizo nada ayer 😑\n'}
+${streakMessage}
 Nada más por ahora. ${list ? 'Un besete 🌺' : 'Un besete... supongo 🥀'}
     `
     return adaptToMarkdownV2(message);
