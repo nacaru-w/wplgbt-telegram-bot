@@ -1,6 +1,6 @@
 {
   "name": "lgbt-telegram-bot",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A bot to be used on the Telegram group for the Wikiproyecto LGBT+",
   "main": "dist/bot.js",
   "scripts": {
