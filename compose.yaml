@@ -1,8 +1,9 @@
 services:
    lgbt-telegram-bot:
      build: .
-     user: "100000"
      restart: unless-stopped
+     volumes:
+       - ./idData.json:/usr/src/app/idData.json
      deploy:
        resources:
          limits:

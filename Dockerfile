@@ -13,6 +13,9 @@ RUN npm install
 # Copy the rest of the project (including config.json and idData.json)
 COPY . .
 
+# Change ownership of data file to the user that will run the container
+RUN chown 100000:100000 idData.json
+
 # Compile TypeScript to dist/
 RUN npm run compile
 
