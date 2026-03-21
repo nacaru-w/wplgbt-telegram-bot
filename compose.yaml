@@ -3,9 +3,12 @@ services:
     build: .
     restart: unless-stopped
     volumes:
-      - ./idData.json:/usr/src/app/idData.json
+      - lgbt-telegram-bot:/usr/src/app
     deploy:
       resources:
         limits:
           cpus: 0.8
           memory: 400M
+
+volumes:
+  lgbt-telegram-bot:
