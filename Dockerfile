@@ -4,17 +4,17 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /usr/src/app
 
+# Create a directory for persistent data
+RUN mkdir -p /usr/src/app/data
+
 # Copy package files
 COPY package*.json tsconfig.json ./
 
 # Install dependencies (include dev so we can compile TS)
 RUN npm install
 
-# Copy the rest of the project (including config.json and idData.json)
+# Copy the rest of the project (including config.json)
 COPY . .
-
-# Change ownership of data file to the user that will run the container
-RUN chown 100000:100000 idData.json
 
 # Compile TypeScript to dist/
 RUN npm run compile
