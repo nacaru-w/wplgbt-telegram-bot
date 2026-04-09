@@ -54,7 +54,7 @@ function saveStreak(newArticles: boolean) {
     logAction('⌛ Updating streak data...');
     streak = newArticles ? (streak + 1) : 0;
     const idData = { groups: chatDictionary, streak };
-    fs.writeFileSync(jsonFilePath, JSON.stringify(idData), 'utf-8');
+    fs.writeFileSync(jsonFilePath, JSON.stringify(idData, null, 2), 'utf-8');
     logAction('✅ Streak data was successfully updated!');
 }
 
@@ -102,7 +102,7 @@ const scheduleMessages = () => {
         }
     });
 
-    const dailyCronExpression = '0 20 * * *'; // Everyday at 20:00
+    const dailyCronExpression = '0 19 * * *'; // Everyday at 19:00
     cron.schedule(dailyCronExpression, async () => {
         try {
             const yesterdaysArticles = await (getYesterdaysPagesAndCreators());
