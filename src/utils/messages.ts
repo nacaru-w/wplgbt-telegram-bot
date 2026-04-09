@@ -82,7 +82,7 @@ export function eventoDelMesRankingMessageBuilder(
 
     // Build the ranking string
     rankedEditors.forEach((participant, index) => {
-        rankingString += `- ${medals[index] || ''} *${participant.username}* con *${participant.articleCount}* artículos (${participant.totalCharacters} bytes)\n`;
+        rankingString += `- ${medals[index] || ''} *${escapeSymbols(participant.username)}* con *${participant.articleCount}* artículos (${participant.totalCharacters} bytes)\n`;
     });
 
     // Build the country and event information
@@ -97,9 +97,9 @@ export function eventoDelMesRankingMessageBuilder(
 
     // Build the final string with top lesbian contributor
     let finalString = `
-En este *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${getCurrentMonthAndYear().month}) de${country ? '' : 'l'} ${country ? countryString : countryInfo.event}*, la clasificación actual es la siguiente:
+En este *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${getCurrentMonthAndYear().month}) de${country ? '' : 'l'} ${country ? countryString : escapeSymbols(countryInfo.event || '')}*, la clasificación actual es la siguiente:
 ${rankingString}
-Han participado un total de __${participantCount} personas__. ${participantCount < 3 ? `Eso son pocas personas 😔, ¿por qué no te animas a participar?` : 'Si aún no te has animado a participar, ¡hazlo para aumentar ese número!'} 
+Han participado un total de __${participantCount} personas__. ${participantCount < 3 ? `Eso son pocas personas 😔, ¿por qué no te animas a participar?` : 'Si aún no te has animado a participar, ¡hazlo para aumentar ese número!'}
 En total, se han creado o mejorado __${totalArticles} artículos__.
 `;
 
@@ -109,12 +109,12 @@ En total, se han creado o mejorado __${totalArticles} artículos__.
             let lesbianTieString: string = '\n👭 Parece que hay empate en el primer puesto para la persona que más biografías de lesbianas redactó:'
             for (let lesbianContributor of topLesbianContributorArr) {
                 const artCount = lesbianContributor.numberOfLesbianArticles;
-                const contributor = lesbianContributor.topLesbianContributor;
+                const contributor = escapeSymbols(lesbianContributor.topLesbianContributor);
                 lesbianTieString += `\n- *${contributor}*, con ${artCount} artículo${artCount > 1 ? 's' : ''}`
             }
             finalString += lesbianTieString;
         } else {
-            finalString += `\n👭 Enhorabuena a *${topLesbianContributorArr[0].topLesbianContributor}* por ser quien más biografías de lesbianas ha creado hasta ahora en este evento, con un total de ${topLesbianContributorArr[0].numberOfLesbianArticles}.\n`;
+            finalString += `\n👭 Enhorabuena a *${escapeSymbols(topLesbianContributorArr[0].topLesbianContributor)}* por ser quien más biografías de lesbianas ha creado hasta ahora en este evento, con un total de ${topLesbianContributorArr[0].numberOfLesbianArticles}.\n`;
         }
     } else {
         finalString += `\n⚠️ Aún no hay premio para la persona que haya redactado la mayor cantidad de artículos sobre biografías de lesbianas. ¿Podrías ser tú?\n`;
@@ -132,7 +132,7 @@ export function lastEventoDelMesRankingBuilder(
 
     // Build the ranking string
     rankedEditors.forEach((participant, index) => {
-        rankingString += `- ${medals[index] || ''} *${participant.username}* con *${participant.articleCount}* artículos (${participant.totalCharacters} bytes)\n`;
+        rankingString += `- ${medals[index] || ''} *${escapeSymbols(participant.username)}* con *${participant.articleCount}* artículos (${participant.totalCharacters} bytes)\n`;
     });
 
     // Build the country and event information
@@ -148,9 +148,9 @@ export function lastEventoDelMesRankingBuilder(
 
     // Build the final string with top lesbian contributor
     let finalString = `
-En el último *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${lastMonthObj.year}/${lastMonthObj.month}) de${country ? '' : 'l'} ${country ? countryString : countryInfo.event}*, la clasificación fue la siguiente:
+En el último *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${lastMonthObj.year}/${lastMonthObj.month}) de${country ? '' : 'l'} ${country ? countryString : escapeSymbols(countryInfo.event || '')}*, la clasificación fue la siguiente:
 ${rankingString}
-Participaron un total de __${participantCount} personas__. ${participantCount < 3 ? `Una pena que no participasen más 😔... ` : '¡Eso son bastantes personas!'} 
+Participaron un total de __${participantCount} personas__. ${participantCount < 3 ? `Una pena que no participasen más 😔... ` : '¡Eso son bastantes personas!'}
 En total, se crearon o mejoraron __${totalArticles} artículos__.
         `;
 
@@ -160,12 +160,12 @@ En total, se crearon o mejoraron __${totalArticles} artículos__.
             let lesbianTieString: string = '\n👭 Parece que hubo empate en el primer puesto para la persona que más biografías de personas lesbianas redactó:'
             for (let lesbianContributor of topLesbianContributorArr) {
                 const artCount = lesbianContributor.numberOfLesbianArticles;
-                const contributor = lesbianContributor.topLesbianContributor;
+                const contributor = escapeSymbols(lesbianContributor.topLesbianContributor);
                 lesbianTieString += `\n- *${contributor}*, con ${artCount} artículo${artCount > 1 ? 's' : ''}`
             }
             finalString += lesbianTieString;
         } else {
-            finalString += `\n👭 *${topLesbianContributorArr[0].topLesbianContributor}* fue quien más biografías de lesbianas redactó, con un total de ${topLesbianContributorArr[0].numberOfLesbianArticles} artículos.\n`;
+            finalString += `\n👭 *${escapeSymbols(topLesbianContributorArr[0].topLesbianContributor)}* fue quien más biografías de lesbianas redactó, con un total de ${topLesbianContributorArr[0].numberOfLesbianArticles} artículos.\n`;
         }
     } else {
         finalString += `\nNadie escribió artículos sobre mujeres lesbianas... qué mal 😕\n`;
