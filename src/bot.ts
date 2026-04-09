@@ -13,7 +13,7 @@ import { Mes } from './types/bot-types';
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const token = config.token;
 
-const jsonFilePath = './idData.json';
+const jsonFilePath = './data/idData.json';
 
 const standardMV2Options: SendMessageOptions = { 'parse_mode': 'MarkdownV2', 'disable_web_page_preview': true }
 const legacyMarkdownOptions: SendMessageOptions = { 'parse_mode': 'Markdown', 'disable_web_page_preview': true }
@@ -29,6 +29,10 @@ function fetchData() {
         chatDictionary = parsedData.groups;
         streak = parsedData?.streak ?? 0;
         logAction('✅ Fetched chat and streak data!')
+    } else {
+        const initialData = { groups: [], streak: 0 };
+        fs.writeFileSync(jsonFilePath, JSON.stringify(initialData, null, 2), 'utf-8');
+        logAction('📄 idData.json did not exist, created with default values')
     }
 }
 
@@ -54,11 +58,18 @@ function saveStreak(newArticles: boolean) {
     logAction('✅ Streak data was successfully updated!');
 }
 
-function broadcastMessage(message: string, options: SendMessageOptions) {
-    chatDictionary.forEach((chat) => {
-        // More formatting options for messages at https://core.telegram.org/bots/api#sendmessage
-        bot.sendMessage(chat.chatId, message, options);
-    })
+async function broadcastMessage(message: string, options: SendMessageOptions) {
+    if (!chatDictionary || chatDictionary.length === 0) {
+        logAction('⚠️ No chats registered for broadcast');
+        return;
+    }
+    for (const chat of chatDictionary) {
+        try {
+            await bot.sendMessage(chat.chatId, message, options);
+        } catch (error) {
+            logAction(`❌ Failed to send message to ${chat.group} (${chat.chatId}):`, error);
+        }
+    }
 }
 
 const scheduleMessages = () => {
@@ -67,10 +78,14 @@ const scheduleMessages = () => {
         const event = LGBTDaysDictionary[day];
         event.days.forEach((dayOfMonth: number) => {
             const cronExpression = `0 14 ${dayOfMonth.toString()} ${event.month.toString()} *`; // At 16:00 on the specified day and month
-            cron.schedule(cronExpression, () => {
-                const message = `🌈¡Hoy es ${LGBTDaysDictionary[day].days.length > 1 ? 'la' : 'el'} ${day}!🌈\n[Más información en su artículo de Wikipedia](https://es.wikipedia.org/wiki/${encodeURIComponent(day)})!`
-                broadcastMessage(message, legacyMarkdownOptions);
-                logAction(`✅ Scheduled ${day} message sent`)
+            cron.schedule(cronExpression, async () => {
+                try {
+                    const message = `🌈¡Hoy es ${LGBTDaysDictionary[day].days.length > 1 ? 'la' : 'el'} ${day}!🌈\n[Más información en su artículo de Wikipedia](https://es.wikipedia.org/wiki/${encodeURIComponent(day)})!`
+                    await broadcastMessage(message, legacyMarkdownOptions);
+                    logAction(`✅ Scheduled ${day} message sent`)
+                } catch (error) {
+                    logAction(`❌ Failed to send scheduled ${day} message:`, error);
+                }
             })
         })
     }
@@ -80,7 +95,7 @@ const scheduleMessages = () => {
         try {
             const res = await getCurrentEventoDelMesInfo();
             const message = eventoDelMesMessageBuilder(res, true);
-            broadcastMessage(message, standardMV2Options);
+            await broadcastMessage(message, standardMV2Options);
             logAction('✅ Scheduled monthly message sent');
         } catch (error) {
             logAction('❌ Failed to send scheduled monthly message:', error);
@@ -97,7 +112,7 @@ const scheduleMessages = () => {
             const newStreak = streak;
             const message = announceYesterdaysCreators(yesterdaysArticles, { newStreak, oldStreak });
 
-            broadcastMessage(message, standardMV2Options);
+            await broadcastMessage(message, standardMV2Options);
             logAction("✅ Yesterdays' creators sent");
 
         } catch (error) {
@@ -172,12 +187,18 @@ bot.on('message', async (msg) => {
 bot.on('my_chat_member', (msg) => {
     const chatId = msg.chat.id;
     const chatTitle = msg.chat.title || 'untitled';
+    const newStatus = msg.new_chat_member.status;
 
-    logAction(`🤖 Bot was added to group ${chatTitle}`)
-
-    saveData({ group: chatTitle, chatId: chatId });
-
-    bot.sendMessage(chatId, addedMessage, standardMV2Options);
+    if (newStatus === 'member' || newStatus === 'administrator') {
+        logAction(`🤖 Bot was added to group ${chatTitle}`)
+        saveData({ group: chatTitle, chatId: chatId });
+        bot.sendMessage(chatId, addedMessage, standardMV2Options);
+    } else if (newStatus === 'left' || newStatus === 'kicked') {
+        logAction(`👋 Bot was removed from group ${chatTitle}`)
+        chatDictionary = chatDictionary.filter(chat => chat.chatId !== chatId);
+        const idData = { groups: chatDictionary, streak };
+        fs.writeFileSync(jsonFilePath, JSON.stringify(idData, null, 2), 'utf-8');
+    }
 })
 
 bot.on('new_chat_members', (msg) => {
