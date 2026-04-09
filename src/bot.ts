@@ -102,7 +102,7 @@ const scheduleMessages = () => {
         }
     });
 
-    const dailyCronExpression = '0 19 * * *'; // Everyday at 19:00
+    const dailyCronExpression = '15 19 * * *'; // Everyday at 19:15
     cron.schedule(dailyCronExpression, async () => {
         try {
             const yesterdaysArticles = await (getYesterdaysPagesAndCreators());
