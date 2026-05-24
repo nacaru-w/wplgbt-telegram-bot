@@ -2,11 +2,6 @@ services:
   lgbt-telegram-bot:
     build: .
     restart: unless-stopped
-    user: "100000:100000"
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
     volumes:
       - bot-data:/usr/src/app/data
     deploy:
