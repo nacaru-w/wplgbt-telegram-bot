@@ -76,6 +76,27 @@ Todo este proceso existe para asegurar que el grupo principal siga siendo un *es
 
 };
 
+/**
+ * Builds a short, human-readable error notice (in MarkdownV2) to post in the chat when something
+ * goes wrong, instead of failing silently. `context` is a short description of what was being
+ * attempted (e.g. the command name) and `error` is whatever was thrown. The untrusted parts (the
+ * error detail and the context) are run through escapeSymbols so that any special characters in an
+ * error message can't break the MarkdownV2 parsing or leak unintended formatting.
+ */
+export function errorMessageBuilder(error: unknown, context?: string): string {
+    const rawDetail = error instanceof Error ? error.message : String(error);
+    const detail = rawDetail.trim() || 'error desconocido';
+    const briefDetail = detail.length > 300 ? `${detail.slice(0, 300)}…` : detail;
+
+    const escapedContext = context ? ` al procesar ${escapeSymbols(context)}` : '';
+    const escapedDetail = escapeSymbols(briefDetail);
+
+    return `🤖💥 *Uy\\.\\.\\. me he tropezado${escapedContext}\\.*\n\n` +
+        `Y mira que presumo de no cansarme nunca, pero hasta los bots tenemos días tontos 🙃\\.\n\n` +
+        `*Esto es lo que ha pasado:* ${escapedDetail}\n\n` +
+        `Inténtalo otra vez en un ratito y, si sigo igual de torpe, avisad a quien me administre\\. Un besete de disculpa 🥀`;
+}
+
 /** Which moment of an observance a scheduled message announces. */
 export type LGBTDayPhase = 'single' | 'start' | 'end';
 

@@ -7,7 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import cron from 'node-cron';
 import { findTopLesbianBiographyContributors, getCurrentEventoDelMesInfo, getEventoDelMesInfoForMonth, getEventoParticipantInfo, getLastEventoDelMesInfo, getYesterdaysPagesAndCreators, rankEditors } from './services/mediawiki-service';
-import { eventoDelMesMessageBuilder, addedMessage, lobbyAddedMessage, newMemberMessageBuilder, lobbyMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder, lastEventoDelMesRankingBuilder, specificEventoDelMesRankingBuilder, eventoRankingUsageMessage, noEventoDataMessageBuilder, announceYesterdaysCreators, lgbtDayMessageBuilder, LGBTDayPhase } from './utils/messages';
+import { eventoDelMesMessageBuilder, addedMessage, lobbyAddedMessage, newMemberMessageBuilder, lobbyMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder, lastEventoDelMesRankingBuilder, specificEventoDelMesRankingBuilder, eventoRankingUsageMessage, noEventoDataMessageBuilder, announceYesterdaysCreators, lgbtDayMessageBuilder, LGBTDayPhase, errorMessageBuilder } from './utils/messages';
 import { getCurrentMonthAndYear, getLastMonthAndYear, isLobbyGroup, logAction, normalizeMonth } from './utils/utils';
 import { Mes } from './types/bot-types';
 
@@ -154,85 +154,104 @@ bot.on('message', async (msg) => {
     const [commandToken, ...commandArgs] = (messageText ?? '').trim().split(/\s+/);
     const command = commandToken.split('@')[0];
 
-    if (messageText == '/start' || messageText == '/start@wikiproyectolgbtbot') {
-        bot.sendMessage(chatId, startMessage, standardMV2Options);
-        logAction('✅ Start message sent');
-    }
+    try {
+        if (messageText == '/start' || messageText == '/start@wikiproyectolgbtbot') {
+            bot.sendMessage(chatId, startMessage, standardMV2Options);
+            logAction('✅ Start message sent');
+        }
 
-    if (command == '/help' || command == '/ayuda') {
-        bot.sendMessage(chatId, helpMessage, standardMV2Options);
-        logAction('✅ Help message sent');
-    }
+        if (command == '/help' || command == '/ayuda') {
+            bot.sendMessage(chatId, helpMessage, standardMV2Options);
+            logAction('✅ Help message sent');
+        }
 
-    if (messageText == '/eventodelmes' || messageText == '/eventodelmes@wikiproyectolgbtbot') {
-        const res = await getCurrentEventoDelMesInfo();
-        bot.sendMessage(chatId, eventoDelMesMessageBuilder(res, true), standardMV2Options);
-        logAction('✅ Evento del mes response sent');
-    }
+        if (messageText == '/eventodelmes' || messageText == '/eventodelmes@wikiproyectolgbtbot') {
+            const res = await getCurrentEventoDelMesInfo();
+            bot.sendMessage(chatId, eventoDelMesMessageBuilder(res, true), standardMV2Options);
+            logAction('✅ Evento del mes response sent');
+        }
 
-    if (command == '/eventodelmesranking') {
-        if (commandArgs.length === 0) {
-            // No arguments: ranking for the current month (default behaviour)
-            const currentMonthObj: { month: Mes, year: string } = getCurrentMonthAndYear();
-            const eventoInfo = await getEventoParticipantInfo(currentMonthObj.year, currentMonthObj.month);
+        if (command == '/eventodelmesranking') {
+            if (commandArgs.length === 0) {
+                // No arguments: ranking for the current month (default behaviour)
+                const currentMonthObj: { month: Mes, year: string } = getCurrentMonthAndYear();
+                const eventoInfo = await getEventoParticipantInfo(currentMonthObj.year, currentMonthObj.month);
 
-            const rankedEditors = rankEditors(eventoInfo);
-            const lesbianContributor = findTopLesbianBiographyContributors(eventoInfo);
-            const currentEventoInfo = await getCurrentEventoDelMesInfo();
+                const rankedEditors = rankEditors(eventoInfo);
+                const lesbianContributor = findTopLesbianBiographyContributors(eventoInfo);
+                const currentEventoInfo = await getCurrentEventoDelMesInfo();
 
-            const rankingMessage = eventoDelMesRankingMessageBuilder(rankedEditors, lesbianContributor, currentEventoInfo)
-            bot.sendMessage(chatId, rankingMessage, standardMV2Options)
-            logAction('✅ Sent out Evento del Mes ranking');
-        } else {
-            // Arguments: ranking for a specific month and year, e.g. "/eventodelmesranking junio 2024"
-            const month = normalizeMonth(commandArgs[0]);
-            const year = commandArgs[1];
-
-            if (!month || !/^\d{4}$/.test(year ?? '')) {
-                bot.sendMessage(chatId, eventoRankingUsageMessage, standardMV2Options);
-                logAction(`⚠️ Evento del Mes ranking: invalid arguments "${commandArgs.join(' ')}"`);
+                const rankingMessage = eventoDelMesRankingMessageBuilder(rankedEditors, lesbianContributor, currentEventoInfo)
+                bot.sendMessage(chatId, rankingMessage, standardMV2Options)
+                logAction('✅ Sent out Evento del Mes ranking');
             } else {
-                const eventoInfo = await getEventoParticipantInfo(year, month);
+                // Arguments: ranking for a specific month and year, e.g. "/eventodelmesranking junio 2024"
+                const month = normalizeMonth(commandArgs[0]);
+                const year = commandArgs[1];
 
-                if (eventoInfo.length === 0) {
-                    bot.sendMessage(chatId, noEventoDataMessageBuilder(month, year), standardMV2Options);
-                    logAction(`⚠️ No Evento del Mes data found for ${month} ${year}`);
+                if (!month || !/^\d{4}$/.test(year ?? '')) {
+                    bot.sendMessage(chatId, eventoRankingUsageMessage, standardMV2Options);
+                    logAction(`⚠️ Evento del Mes ranking: invalid arguments "${commandArgs.join(' ')}"`);
                 } else {
-                    const rankedEditors = rankEditors(eventoInfo);
-                    const lesbianContributor = findTopLesbianBiographyContributors(eventoInfo);
-                    const eventoDelMesInfo = await getEventoDelMesInfoForMonth(year, month);
+                    const eventoInfo = await getEventoParticipantInfo(year, month);
 
-                    const rankingMessage = specificEventoDelMesRankingBuilder(rankedEditors, lesbianContributor, eventoDelMesInfo, { month, year });
-                    bot.sendMessage(chatId, rankingMessage, standardMV2Options);
-                    logAction(`✅ Sent out Evento del Mes ranking for ${month} ${year}`);
+                    if (eventoInfo.length === 0) {
+                        bot.sendMessage(chatId, noEventoDataMessageBuilder(month, year), standardMV2Options);
+                        logAction(`⚠️ No Evento del Mes data found for ${month} ${year}`);
+                    } else {
+                        const rankedEditors = rankEditors(eventoInfo);
+                        const lesbianContributor = findTopLesbianBiographyContributors(eventoInfo);
+                        const eventoDelMesInfo = await getEventoDelMesInfoForMonth(year, month);
+
+                        const rankingMessage = specificEventoDelMesRankingBuilder(rankedEditors, lesbianContributor, eventoDelMesInfo, { month, year });
+                        bot.sendMessage(chatId, rankingMessage, standardMV2Options);
+                        logAction(`✅ Sent out Evento del Mes ranking for ${month} ${year}`);
+                    }
                 }
             }
         }
-    }
 
-    if (messageText == '/eventodelmesrankingpasado' || messageText == '/eventodelmesrankingpasado@wikiproyectolgbtbot') {
-        const lastMonthObj: { month: Mes, year: string } = getLastMonthAndYear();
-        const eventoInfo = await getEventoParticipantInfo(lastMonthObj.year, lastMonthObj.month);
+        if (messageText == '/eventodelmesrankingpasado' || messageText == '/eventodelmesrankingpasado@wikiproyectolgbtbot') {
+            const lastMonthObj: { month: Mes, year: string } = getLastMonthAndYear();
+            const eventoInfo = await getEventoParticipantInfo(lastMonthObj.year, lastMonthObj.month);
 
-        const lastRankedEditors = rankEditors(eventoInfo);
-        const lastlesbianContributor = findTopLesbianBiographyContributors(eventoInfo);
-        const lastEventoInfo = await getLastEventoDelMesInfo();
+            const lastRankedEditors = rankEditors(eventoInfo);
+            const lastlesbianContributor = findTopLesbianBiographyContributors(eventoInfo);
+            const lastEventoInfo = await getLastEventoDelMesInfo();
 
-        const lastRankingMessage = lastEventoDelMesRankingBuilder(
-            lastRankedEditors,
-            lastlesbianContributor,
-            lastEventoInfo
-        );
+            const lastRankingMessage = lastEventoDelMesRankingBuilder(
+                lastRankedEditors,
+                lastlesbianContributor,
+                lastEventoInfo
+            );
 
-        bot.sendMessage(chatId, lastRankingMessage, standardMV2Options);
+            bot.sendMessage(chatId, lastRankingMessage, standardMV2Options);
 
-        logAction('✅ Sent out last Evento del Mes ranking');
+            logAction('✅ Sent out last Evento del Mes ranking');
 
-    }
+        }
 
-    if (messageText == '/artículosayer' || messageText == '/articulosayer' || messageText == '/articulosayer@wikiproyectolgbtbot' || messageText == '/artículosayer@wikiproyectolgbtbot') {
-        const yesterdaysArticles = await (getYesterdaysPagesAndCreators());
-        bot.sendMessage(chatId, announceYesterdaysCreators(yesterdaysArticles), standardMV2Options);
+        if (messageText == '/artículosayer' || messageText == '/articulosayer' || messageText == '/articulosayer@wikiproyectolgbtbot' || messageText == '/artículosayer@wikiproyectolgbtbot') {
+            const yesterdaysArticles = await (getYesterdaysPagesAndCreators());
+            bot.sendMessage(chatId, announceYesterdaysCreators(yesterdaysArticles), standardMV2Options);
+        }
+    } catch (error) {
+        // Surface the failure in the chat where the command was issued, with a brief explanation,
+        // instead of failing silently as an unhandled rejection.
+        const context = command.startsWith('/') ? `el comando ${command}` : 'tu mensaje';
+        logAction(`❌ Error handling ${context}:`, error);
+        try {
+            await bot.sendMessage(chatId, errorMessageBuilder(error, context), standardMV2Options);
+        } catch (notifyError) {
+            // If the formatted notice itself can't be delivered (e.g. a parse issue), fall back to a
+            // bare plain-text message so the chat is still told something went wrong.
+            logAction('⚠️ Could not send the formatted error notice, retrying as plain text:', notifyError);
+            try {
+                await bot.sendMessage(chatId, '🤖💥 Uy... algo ha fallado y ni siquiera he podido contaros bien el error. Inténtalo otra vez en un ratito. Un besete de disculpa 🥀');
+            } catch (plainError) {
+                logAction('❌ Could not deliver the error notice to the chat:', plainError);
+            }
+        }
     }
 
 })
