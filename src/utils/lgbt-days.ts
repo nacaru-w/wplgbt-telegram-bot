@@ -39,12 +39,53 @@ function getPronounsDay(): number[] {
     return [thirdWednesday];
 }
 
+function getAromanticAwarenessWeekDays(): number[] {
+    const currentYear = new Date().getFullYear();
+    const februaryFourteenth = new Date(currentYear, 1, 14); // February 14th
+
+    // The Aromantic Spectrum Awareness Week runs for a full week (Sunday–Saturday) starting on the
+    // first Sunday strictly after February 14th.
+    const dayOfWeek = februaryFourteenth.getDay(); // 0 = Sunday
+    const daysUntilSunday = (7 - dayOfWeek) % 7 || 7;
+    const firstSunday = 14 + daysUntilSunday;
+
+    const weekDays: number[] = [];
+    for (let i = 0; i < 7; i++) {
+        weekDays.push(firstSunday + i);
+    }
+
+    return weekDays;
+}
+
+function getTransDepathologizationDay(): number[] {
+    const currentYear = new Date().getFullYear();
+    const octoberThirtyFirst = new Date(currentYear, 9, 31); // October 31st
+
+    // The International Day of Action for Trans Depathologization is observed on the last Saturday
+    // of October, so step back from the 31st to the most recent Saturday (day 6).
+    const dayOfWeek = octoberThirtyFirst.getDay();
+    const lastSaturday = 31 - ((dayOfWeek - 6 + 7) % 7);
+
+    return [lastSaturday];
+}
+
 
 export const LGBTDaysDictionary: LGBTDays = {
     'Día Internacional contra la Homofobia en el Deporte': {
         keyword: 'lgbt',
         month: 2,
         days: [19]
+    },
+    'Semana de Concienciación sobre el Arromanticismo': {
+        keyword: 'aro',
+        month: 2,
+        days: getAromanticAwarenessWeekDays(),
+        period: 'week'
+    },
+    'Día de la Cero Discriminación': {
+        keyword: 'lgbt',
+        month: 3,
+        days: [1]
     },
     'Día Internacional de la Visibilidad Trans': {
         keyword: 'trans',
@@ -61,6 +102,14 @@ export const LGBTDaysDictionary: LGBTDays = {
         month: 4,
         days: [6]
     },
+    'Aniversario de la Ley de Identidad de Género': {
+        keyword: 'trans',
+        month: 5,
+        days: [9],
+        country: 'Argentina',
+        flag: '🇦🇷',
+        article: 'Ley de identidad de género (Argentina)'
+    },
     'Día Internacional contra la Homofobia, Transfobia y Bifobia': {
         keyword: 'bisexual',
         month: 5,
@@ -76,6 +125,20 @@ export const LGBTDaysDictionary: LGBTDays = {
         month: 5,
         days: [24]
     },
+    'Día Nacional de Lucha contra la Violencia y Crímenes de Odio hacia Lesbianas, Trans, Gays y Bisexuales': {
+        keyword: 'lgbt',
+        month: 5,
+        days: [31],
+        country: 'Perú',
+        flag: '🇵🇪'
+    },
+    'Mes del Orgullo LGBT+': {
+        keyword: 'lgbt',
+        month: 6,
+        days: [1, 30],
+        period: 'month',
+        article: 'Orgullo LGBT'
+    },
     'Día internacional de la bandera LGBT+': {
         keyword: 'lgbt',
         month: 6,
@@ -86,15 +149,39 @@ export const LGBTDaysDictionary: LGBTDays = {
         month: 6,
         days: [28]
     },
+    'Aniversario de la Ley Zamudio': {
+        keyword: 'lgbt',
+        month: 7,
+        days: [12],
+        country: 'Chile',
+        flag: '🇨🇱',
+        article: 'Ley Zamudio'
+    },
     'Día Internacional de las Personas No Binarias': {
         keyword: 'nb',
         month: 7,
         days: [14]
     },
+    'Aniversario de la Ley de Matrimonio Igualitario': {
+        keyword: 'lgbt',
+        month: 7,
+        days: [15],
+        country: 'Argentina',
+        flag: '🇦🇷',
+        article: 'Matrimonio igualitario en Argentina'
+    },
     'Día de la bandera trans': {
         keyword: 'trans',
         month: 8,
         days: [19]
+    },
+    'Día Nacional contra la Homofobia en Colombia': {
+        keyword: 'lgbt',
+        month: 8,
+        days: [23],
+        country: 'Colombia',
+        flag: '🇨🇴',
+        article: 'León Zuleta'
     },
     'Día de la Visibilidad Bisexual': {
         keyword: 'bisexual',
@@ -126,6 +213,11 @@ export const LGBTDaysDictionary: LGBTDays = {
         month: 10,
         days: [26]
     },
+    'Día Internacional de Acción por la Despatologización Trans': {
+        keyword: 'trans',
+        month: 10,
+        days: getTransDepathologizationDay()
+    },
     'Día de las personas LGBT en la Ciencia': {
         keyword: 'lgbt',
         month: 11,
@@ -134,17 +226,31 @@ export const LGBTDaysDictionary: LGBTDays = {
     'Semana de la Concienciación Transgénero': {
         keyword: 'trans',
         month: 11,
-        days: [13, 14, 15, 16, 17, 18, 19]
+        days: [13, 14, 15, 16, 17, 18, 19],
+        period: 'week'
     },
     'Día de la Memoria Intersexual': {
         keyword: 'intersex',
         month: 11,
         days: [8]
     },
+    'Día de la Despenalización de la Homosexualidad en Ecuador': {
+        keyword: 'lgbt',
+        month: 11,
+        days: [27],
+        country: 'Ecuador',
+        flag: '🇪🇨',
+        article: 'Despenalización de la homosexualidad en Ecuador'
+    },
     'Día de la Memoria Trans': {
         keyword: 'trans',
         month: 11,
         days: [20]
+    },
+    'Día Mundial de la Lucha contra el Sida': {
+        keyword: 'lgbt',
+        month: 12,
+        days: [1]
     }
 }
 

@@ -12,25 +12,38 @@ export type Mes =
     | 'Noviembre'
     | 'Diciembre';
 
+export interface LGBTDayInfo {
+    keyword:
+    'agender' |
+    'aro' |
+    'asexual' |
+    'bear' |
+    'bisexual' |
+    'fluid' |
+    'genderqueer' |
+    'intersex' |
+    'lesbian' |
+    'lgbt' |
+    'nb' |
+    'pan' |
+    'trans';
+    month: number;
+    days: number[];
+    /**
+     * Length of the observance. 'week'/'month' are announced only on their first and last day
+     * (with "comienza"/"termina" wording) instead of every day. Defaults to 'day'.
+     */
+    period?: 'day' | 'week' | 'month';
+    /** Country name when this is a national (rather than international) observance; surfaced in the message. */
+    country?: string;
+    /** Optional emoji flag shown next to the country. */
+    flag?: string;
+    /** Wikipedia article title to link to, when it differs from the observance name (the dictionary key). */
+    article?: string;
+}
+
 export interface LGBTDays {
-    [name: string]: {
-        keyword:
-        'agender' |
-        'aro' |
-        'asexual' |
-        'bear' |
-        'bisexual' |
-        'fluid' |
-        'genderqueer' |
-        'intersex' |
-        'lesbian' |
-        'lgbt' |
-        'nb' |
-        'pan' |
-        'trans',
-        month: number,
-        days: number[]
-    }
+    [name: string]: LGBTDayInfo;
 }
 
 export interface EventoDelMesInfo {
