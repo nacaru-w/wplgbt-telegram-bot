@@ -4,10 +4,11 @@
 import { LGBTDaysDictionary } from './utils/lgbt-days';
 import TelegramBot, { SendMessageOptions } from 'node-telegram-bot-api';
 import fs from 'fs';
+import path from 'path';
 import cron from 'node-cron';
-import { findTopLesbianBiographyContributors, getCurrentEventoDelMesInfo, getEventoParticipantInfo, getLastEventoDelMesInfo, getYesterdaysPagesAndCreators, rankEditors } from './services/mediawiki-service';
-import { eventoDelMesMessageBuilder, addedMessage, newMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder, lastEventoDelMesRankingBuilder, announceYesterdaysCreators } from './utils/messages';
-import { getCurrentMonthAndYear, getLastMonthAndYear, logAction } from './utils/utils';
+import { findTopLesbianBiographyContributors, getCurrentEventoDelMesInfo, getEventoDelMesInfoForMonth, getEventoParticipantInfo, getLastEventoDelMesInfo, getYesterdaysPagesAndCreators, rankEditors } from './services/mediawiki-service';
+import { eventoDelMesMessageBuilder, addedMessage, lobbyAddedMessage, newMemberMessageBuilder, lobbyMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder, lastEventoDelMesRankingBuilder, specificEventoDelMesRankingBuilder, eventoRankingUsageMessage, noEventoDataMessageBuilder, announceYesterdaysCreators, lgbtDayMessageBuilder, LGBTDayPhase } from './utils/messages';
+import { getCurrentMonthAndYear, getLastMonthAndYear, isLobbyGroup, logAction, normalizeMonth } from './utils/utils';
 import { Mes } from './types/bot-types';
 
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
@@ -23,6 +24,10 @@ let streak: number = 0;
 
 function fetchData() {
     logAction('⌛ Fetching chat and streak data...')
+    // Make sure the data directory exists before any read/write. In Docker this is the mounted
+    // volume, but locally (or on a fresh checkout) the folder may be missing, which would make the
+    // writeFileSync below throw ENOENT.
+    fs.mkdirSync(path.dirname(jsonFilePath), { recursive: true });
     if (fs.existsSync(jsonFilePath)) {
         const data = fs.readFileSync(jsonFilePath, 'utf-8')
         const parsedData: { groups: { group: string, chatId: number }[], streak: number } = JSON.parse(data)
@@ -74,20 +79,36 @@ async function broadcastMessage(message: string, options: SendMessageOptions) {
 
 const scheduleMessages = () => {
     logAction('⏰ Running scheduled messages...')
-    for (let day in LGBTDaysDictionary) {
-        const event = LGBTDaysDictionary[day];
-        event.days.forEach((dayOfMonth: number) => {
-            const cronExpression = `0 14 ${dayOfMonth.toString()} ${event.month.toString()} *`; // At 16:00 on the specified day and month
+    for (let name in LGBTDaysDictionary) {
+        const event = LGBTDaysDictionary[name];
+        const period = event.period ?? 'day';
+
+        // Schedules a single broadcast for the given day of the observance's month.
+        const scheduleDay = (dayOfMonth: number, phase: LGBTDayPhase) => {
+            const cronExpression = `0 14 ${dayOfMonth.toString()} ${event.month.toString()} *`; // At 14:00 on the specified day and month
             cron.schedule(cronExpression, async () => {
                 try {
-                    const message = `🌈¡Hoy es ${LGBTDaysDictionary[day].days.length > 1 ? 'la' : 'el'} ${day}!🌈\n[Más información en su artículo de Wikipedia](https://es.wikipedia.org/wiki/${encodeURIComponent(day)})!`
+                    const message = lgbtDayMessageBuilder(name, event, phase);
                     await broadcastMessage(message, legacyMarkdownOptions);
-                    logAction(`✅ Scheduled ${day} message sent`)
+                    logAction(`✅ Scheduled ${name} (${phase}) message sent`)
                 } catch (error) {
-                    logAction(`❌ Failed to send scheduled ${day} message:`, error);
+                    logAction(`❌ Failed to send scheduled ${name} message:`, error);
                 }
             })
-        })
+        };
+
+        if (period === 'day') {
+            // Single-day observances are announced on each of their days.
+            event.days.forEach((dayOfMonth: number) => scheduleDay(dayOfMonth, 'single'));
+        } else {
+            // Weeks and months are announced only on their first ("comienza") and last ("termina") day.
+            const firstDay = event.days[0];
+            const lastDay = event.days[event.days.length - 1];
+            scheduleDay(firstDay, 'start');
+            if (lastDay !== firstDay) {
+                scheduleDay(lastDay, 'end');
+            }
+        }
     }
 
     const monthlyCronExpression = '0 18 1 * *'; // At 18:00 on the 1st day of every month
@@ -128,12 +149,17 @@ bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const messageText = msg.text;
 
+    // Split a command message into its command (without the optional @botname mention) and arguments,
+    // so commands like /eventodelmesranking can accept parameters such as "junio 2024".
+    const [commandToken, ...commandArgs] = (messageText ?? '').trim().split(/\s+/);
+    const command = commandToken.split('@')[0];
+
     if (messageText == '/start' || messageText == '/start@wikiproyectolgbtbot') {
         bot.sendMessage(chatId, startMessage, standardMV2Options);
         logAction('✅ Start message sent');
     }
 
-    if (messageText == '/help' || messageText == '/help@wikiproyectolgbtbot') {
+    if (command == '/help' || command == '/ayuda') {
         bot.sendMessage(chatId, helpMessage, standardMV2Options);
         logAction('✅ Help message sent');
     }
@@ -144,17 +170,44 @@ bot.on('message', async (msg) => {
         logAction('✅ Evento del mes response sent');
     }
 
-    if (messageText == '/eventodelmesranking' || messageText == '/eventodelmesranking@wikiproyectolgbtbot') {
-        const currentMonthObj: { month: Mes, year: string } = getCurrentMonthAndYear();
-        const eventoInfo = await getEventoParticipantInfo(currentMonthObj.year, currentMonthObj.month);
+    if (command == '/eventodelmesranking') {
+        if (commandArgs.length === 0) {
+            // No arguments: ranking for the current month (default behaviour)
+            const currentMonthObj: { month: Mes, year: string } = getCurrentMonthAndYear();
+            const eventoInfo = await getEventoParticipantInfo(currentMonthObj.year, currentMonthObj.month);
 
-        const rankedEditors = rankEditors(eventoInfo);
-        const lesbianContributor = findTopLesbianBiographyContributors(eventoInfo);
-        const currentEventoInfo = await getCurrentEventoDelMesInfo();
+            const rankedEditors = rankEditors(eventoInfo);
+            const lesbianContributor = findTopLesbianBiographyContributors(eventoInfo);
+            const currentEventoInfo = await getCurrentEventoDelMesInfo();
 
-        const rankingMessage = eventoDelMesRankingMessageBuilder(rankedEditors, lesbianContributor, currentEventoInfo)
-        bot.sendMessage(chatId, rankingMessage, standardMV2Options)
-        logAction('✅ Sent out Evento del Mes ranking');
+            const rankingMessage = eventoDelMesRankingMessageBuilder(rankedEditors, lesbianContributor, currentEventoInfo)
+            bot.sendMessage(chatId, rankingMessage, standardMV2Options)
+            logAction('✅ Sent out Evento del Mes ranking');
+        } else {
+            // Arguments: ranking for a specific month and year, e.g. "/eventodelmesranking junio 2024"
+            const month = normalizeMonth(commandArgs[0]);
+            const year = commandArgs[1];
+
+            if (!month || !/^\d{4}$/.test(year ?? '')) {
+                bot.sendMessage(chatId, eventoRankingUsageMessage, standardMV2Options);
+                logAction(`⚠️ Evento del Mes ranking: invalid arguments "${commandArgs.join(' ')}"`);
+            } else {
+                const eventoInfo = await getEventoParticipantInfo(year, month);
+
+                if (eventoInfo.length === 0) {
+                    bot.sendMessage(chatId, noEventoDataMessageBuilder(month, year), standardMV2Options);
+                    logAction(`⚠️ No Evento del Mes data found for ${month} ${year}`);
+                } else {
+                    const rankedEditors = rankEditors(eventoInfo);
+                    const lesbianContributor = findTopLesbianBiographyContributors(eventoInfo);
+                    const eventoDelMesInfo = await getEventoDelMesInfoForMonth(year, month);
+
+                    const rankingMessage = specificEventoDelMesRankingBuilder(rankedEditors, lesbianContributor, eventoDelMesInfo, { month, year });
+                    bot.sendMessage(chatId, rankingMessage, standardMV2Options);
+                    logAction(`✅ Sent out Evento del Mes ranking for ${month} ${year}`);
+                }
+            }
+        }
     }
 
     if (messageText == '/eventodelmesrankingpasado' || messageText == '/eventodelmesrankingpasado@wikiproyectolgbtbot') {
@@ -192,7 +245,8 @@ bot.on('my_chat_member', (msg) => {
     if (newStatus === 'member' || newStatus === 'administrator') {
         logAction(`🤖 Bot was added to group ${chatTitle}`)
         saveData({ group: chatTitle, chatId: chatId });
-        bot.sendMessage(chatId, addedMessage, standardMV2Options);
+        const introMessage = isLobbyGroup(chatTitle) ? lobbyAddedMessage : addedMessage;
+        bot.sendMessage(chatId, introMessage, standardMV2Options);
     } else if (newStatus === 'left' || newStatus === 'kicked') {
         logAction(`👋 Bot was removed from group ${chatTitle}`)
         chatDictionary = chatDictionary.filter(chat => chat.chatId !== chatId);
@@ -210,7 +264,10 @@ bot.on('new_chat_members', (msg) => {
         if (!newMembers[0].is_bot) {
             const newMember = newMembers[0].username
             logAction(`❗ Greeting new member ${newMember} that was added to group ${chatTitle}`);
-            bot.sendMessage(chatId, newMemberMessageBuilder(newMember || 'usuarie'), standardMV2Options)
+            const welcomeMessage = isLobbyGroup(chatTitle)
+                ? lobbyMemberMessageBuilder(newMember || 'usuarie')
+                : newMemberMessageBuilder(newMember || 'usuarie');
+            bot.sendMessage(chatId, welcomeMessage, standardMV2Options)
         }
     }
 
