@@ -1,7 +1,7 @@
-import { Article, EventoDelMesInfo, EventoDelMesRanking, LesbianArticleContribution, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
+import { Article, EventoDelMesInfo, EventoDelMesRanking, LesbianArticleContribution, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
 import { ArticleObject, MediawikiParams } from "../types/mediawiki-types";
 import { adaptLinkToURL } from "../utils/parsing";
-import { getCurrentMonthAndYear, getCurrentYear, getLastMonthAndYear, removeBrackets, titleCase } from "../utils/utils";
+import { getCurrentMonthAndYear, getLastMonthAndYear, removeBrackets, titleCase } from "../utils/utils";
 
 const headers = new Headers({
     'Content-Type': 'application/json',
@@ -116,34 +116,26 @@ function findEventForGivenTime(fullPage: string, year: string, month: string): s
     return monthMatch ? monthMatch[1].trim() : null;
 }
 
-export async function getCurrentEventoDelMesInfo(): Promise<EventoDelMesInfo> {
+export async function getEventoDelMesInfoForMonth(year: string, month: Mes): Promise<EventoDelMesInfo> {
     const wikiPage: string = "Wikiproyecto:LGBT/Evento del mes";
 
     const pageContent = await getWikipediaPageContent(wikiPage);
-    const event = findEventForGivenTime(pageContent.content, getCurrentYear(), getCurrentMonthAndYear().month)
+    const event = findEventForGivenTime(pageContent.content, year, month);
 
-    const eventObj = {
+    return {
         event: removeBrackets(event),
-        month: getCurrentMonthAndYear().month
-    }
+        month
+    };
+}
 
-    return eventObj;
+export async function getCurrentEventoDelMesInfo(): Promise<EventoDelMesInfo> {
+    const { month, year } = getCurrentMonthAndYear();
+    return getEventoDelMesInfoForMonth(year, month);
 }
 
 export async function getLastEventoDelMesInfo(): Promise<EventoDelMesInfo> {
-    const wikiPage: string = "Wikiproyecto:LGBT/Evento del mes";
-    const pageContent = await getWikipediaPageContent(wikiPage);
-    const lastMonthAndYear = getLastMonthAndYear();
-
-    const event = findEventForGivenTime(pageContent.content, lastMonthAndYear.year, lastMonthAndYear.month);
-
-    const eventObj = {
-        event: removeBrackets(event),
-        month: lastMonthAndYear.month
-    }
-
-    return eventObj
-
+    const { month, year } = getLastMonthAndYear();
+    return getEventoDelMesInfoForMonth(year, month);
 }
 
 export async function getEventoParticipantInfo(year: string, month: string): Promise<EventoDelMesRanking[]> {
@@ -162,34 +154,39 @@ export function isLesbianArticle(articleContent: string): boolean {
 }
 
 async function extractEventoParticipantInfoFromTable(text: string): Promise<EventoDelMesRanking[]> {
-    // Extract the "Artículos trabajados" section
-    const sectionRegex = /=== Artículos trabajados ===([\s\S]*?)===/;
-    const sectionMatch = sectionRegex.exec(text);
-    let sectionText = '';
+    // Prefer the "Artículos trabajados" section when present (standard monthly pages); otherwise
+    // fall back to the full text, since some events (e.g. the Mes del Orgullo) keep the table on a
+    // dedicated subpage with no such heading.
+    const sectionMatch = /===\s*Artículos trabajados\s*===([\s\S]*?)(?:\n==|$)/.exec(text);
+    const tableText = sectionMatch ? sectionMatch[1] : text;
 
-    if (!sectionMatch) {
-        if (text.includes('Artículo !! Comentario y tamaño !! Wikidata !! Usuari@')) {
-            sectionText = text
-        } else {
-            return [];
-        }
-    } else {
-        sectionText = sectionMatch[1];
-    }
+    // Split the table into rows. MediaWiki separates rows with a line whose first non-space
+    // characters are "|-". Treating each row independently lets us parse cells written inline
+    // (| a || b || c) as well as one-per-line (| a \n | b \n | c).
+    const rows = tableText.split(/^\s*\|-.*$/m);
 
-    // Regular expression to match table rows in the "Artículos trabajados" section
-    const rowRegex = /\|-\s*\n\|\s*(\d+)\s*\|\|\s*\[\[(.*?)\]\]\s*\|\|\s*(.*?)\s*\|\|\s*\{\{[^\|]+\|[^\}]+\}\}\s*\|\|\s*\{\{u\|([^\}]+)\}\}/g;
-    let match;
     const userArticlesMap: Record<string, Article[]> = {};
 
-    // Iterate over each row in the table
-    while ((match = rowRegex.exec(sectionText)) !== null) {
-        const [, , title, , username] = match;
+    for (const row of rows) {
+        // A contribution row is identified by its content, not its column position: it must hold an
+        // article link and an editor template. This tolerates column reorderings and substitutions
+        // such as a "Fecha" column replacing the "Wikidata" one, which the bot does not use anyway.
+        const titleMatch = row.match(/\[\[\s*([^\]|]+?)\s*(?:\|[^\]]*)?\]\]/);
+        const userMatch = row.match(/\{\{\s*u\s*\|\s*([^}|]+?)\s*\}\}/i);
+        if (!titleMatch || !userMatch) {
+            continue;
+        }
 
-        const cleanTitle = adaptLinkToURL(title.trim());
+        const title = titleMatch[1].trim();
+        const username = userMatch[1].trim();
+
+        // Skip the placeholder/example row bundled in the table templates ([[---]] / {{u|---}}).
+        if (title === '---' || username === '---') {
+            continue;
+        }
 
         // Fetch the content of the article
-        const articleContent = await getWikipediaPageContent(cleanTitle);
+        const articleContent = await getWikipediaPageContent(adaptLinkToURL(title));
 
         // Determine the number of characters and if the article is related to lesbian topics
         const characters = articleContent.content.length;
@@ -197,7 +194,7 @@ async function extractEventoParticipantInfoFromTable(text: string): Promise<Even
 
         // Create the article object
         const article: Article = {
-            title: title.trim(),
+            title,
             characters,
             lesbian,
         };
