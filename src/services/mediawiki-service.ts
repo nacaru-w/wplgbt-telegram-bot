@@ -1,6 +1,5 @@
 import { Article, EventoDelMesInfo, EventoDelMesRanking, LesbianArticleContribution, Mes, RankedEditor, TopLesbianArticleContributor } from "../types/bot-types";
 import { ArticleObject, MediawikiParams } from "../types/mediawiki-types";
-import { adaptLinkToURL } from "../utils/parsing";
 import { getCurrentMonthAndYear, getLastMonthAndYear, removeBrackets, titleCase } from "../utils/utils";
 
 const headers = new Headers({
@@ -47,6 +46,86 @@ export async function getWikipediaPageContent(pageTitle: string): Promise<{ titl
             content: `An error occurred: ${error.message}`
         }
     }
+}
+
+/**
+ * Batched counterpart of {@link getWikipediaPageContent}: fetches the latest wikitext of many
+ * pages in a single API request instead of one request per page. Titles are chunked in groups of
+ * 50 (the anonymous `titles=` limit), so N articles cost ceil(N / 50) requests rather than N.
+ *
+ * Returns a map from the *requested* title to its content. The API rewrites titles (normalisation
+ * and redirect resolution), so those rewrites are mapped back to the original strings the caller
+ * passed in. Pages that are missing or whose chunk failed to load map to an empty string.
+ */
+export async function getWikipediaPagesContent(pageTitles: string[]): Promise<Map<string, string>> {
+    const result = new Map<string, string>();
+
+    // De-duplicate so an article worked on by several editors is only requested once.
+    const uniqueTitles = [...new Set(pageTitles)];
+
+    const TITLES_PER_REQUEST = 50; // Anonymous apihighlimit for the `titles` parameter.
+
+    for (let i = 0; i < uniqueTitles.length; i += TITLES_PER_REQUEST) {
+        const chunk = uniqueTitles.slice(i, i + TITLES_PER_REQUEST);
+
+        const params: MediawikiParams = {
+            action: "query",
+            prop: "revisions",
+            titles: chunk.join("|"),
+            rvprop: "content",
+            rvslots: "main",
+            redirects: "1",
+            formatversion: "2",
+            format: "json",
+            origin: "*"
+        };
+
+        // Sent as a POST body rather than a query string: 50 titles can exceed safe URL lengths.
+        const body = new URLSearchParams();
+        for (const param in params) {
+            body.append(param, String(params[param]));
+        }
+
+        try {
+            const response = await fetch("https://es.wikipedia.org/w/api.php", {
+                method: "POST",
+                headers: new Headers({
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Accept": "application/json",
+                    "User-Agent": headers.get("User-Agent")!
+                }),
+                body
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+
+            // Rebuild the title rewrites the API applied so results can be keyed by the exact
+            // strings the caller asked for.
+            const normalized: Record<string, string> = {};
+            for (const n of data.query?.normalized ?? []) normalized[n.from] = n.to;
+            const redirects: Record<string, string> = {};
+            for (const r of data.query?.redirects ?? []) redirects[r.from] = r.to;
+
+            const contentByTitle: Record<string, string> = {};
+            for (const page of data.query?.pages ?? []) {
+                const content = page?.revisions?.[0]?.slots?.main?.content;
+                if (typeof content === "string") contentByTitle[page.title] = content;
+            }
+
+            for (const requested of chunk) {
+                const afterNormalization = normalized[requested] ?? requested;
+                const finalTitle = redirects[afterNormalization] ?? afterNormalization;
+                result.set(requested, contentByTitle[finalTitle] ?? "");
+            }
+        } catch (error: any) {
+            console.error("An error occurred while batch-fetching page content:", error.message);
+            // Leave this chunk's titles out of the map; callers treat absent titles as empty.
+        }
+    }
+
+    return result;
 }
 
 export async function getPageCreator(page: string): Promise<string | null> {
@@ -165,7 +244,9 @@ async function extractEventoParticipantInfoFromTable(text: string): Promise<Even
     // (| a || b || c) as well as one-per-line (| a \n | b \n | c).
     const rows = tableText.split(/^\s*\|-.*$/m);
 
-    const userArticlesMap: Record<string, Article[]> = {};
+    // First pass: collect every (title, username) contribution from the table without touching the
+    // API, so all article contents can be resolved in a single batched request below.
+    const contributions: { title: string, username: string }[] = [];
 
     for (const row of rows) {
         // A contribution row is identified by its content, not its column position: it must hold an
@@ -185,18 +266,23 @@ async function extractEventoParticipantInfoFromTable(text: string): Promise<Even
             continue;
         }
 
-        // Fetch the content of the article
-        const articleContent = await getWikipediaPageContent(adaptLinkToURL(title));
+        contributions.push({ title, username });
+    }
+
+    // Resolve the wikitext of every contributed article in one batched API call (chunked at 50
+    // titles) instead of one request per article.
+    const contentByTitle = await getWikipediaPagesContent(contributions.map(c => c.title));
+
+    const userArticlesMap: Record<string, Article[]> = {};
+
+    for (const { title, username } of contributions) {
+        const content = contentByTitle.get(title) ?? "";
 
         // Determine the number of characters and if the article is related to lesbian topics
-        const characters = articleContent.content.length;
-        const lesbian = isLesbianArticle(articleContent.content);
-
-        // Create the article object
         const article: Article = {
             title,
-            characters,
-            lesbian,
+            characters: content.length,
+            lesbian: isLesbianArticle(content),
         };
 
         // Add the article to the user's list
