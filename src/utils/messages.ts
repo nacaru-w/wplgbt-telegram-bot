@@ -61,15 +61,15 @@ export function newMemberMessageBuilder(newMember: string): string {
 export function lobbyMemberMessageBuilder(newMember: string): string {
     const finalMessage = '¡Hola, ' + (newMember !== 'usuarie' ? '@' : '') + escapeUnderscores(newMember) + ', ' + adaptToMarkdownV2(`te damos la bienvenida a la antesala del grupo de Telegram del *[WikiProyecto LGBT\\+](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT)*!
 
-Este grupo es solo una *antesala* al *grupo principal*. Se te añadirá a él siguiendo un *protocolo de seguridad* para garantizar que es un *espacio seguro*:
+Este grupo es la *antesala* al *grupo principal*. Para mantenerlo como un *espacio seguro*, seguimos un breve *protocolo de seguridad*:
 
 · Indica tu *cuenta de Wikimedia* (puedes compartirla *en privado* con el equipo de administración si lo prefieres).
 · Cuéntanos si has trabajado en *contenido LGBT\\+* en los proyectos Wikimedia.
 · Asegúrate de haberte apuntado en la [lista de participantes del WikiProyecto LGBT+](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/participantes) en la Wikipedia en español.
 
-Una vez nos facilites estos datos y tras la aprobación del equipo de administración, se realizará una *verificación* a través de la *función de «agradecer»* de tu cuenta en la Wikipedia en español. Cuando se complete, se te añadirá al *grupo principal*.
+Cuando nos facilites estos datos, tras la aprobación del equipo de administración se realizará una *verificación* mediante la *función de «agradecer»* de tu cuenta en la Wikipedia en español y se te añadirá al *grupo principal*.
 
-Todo este proceso existe para asegurar que el grupo principal siga siendo un *espacio seguro* para todas las personas que forman parte de él. ¡Gracias por tu comprensión y tu paciencia! ¡Nos vemos pronto! 🤖
+¡Gracias por tu comprensión y tu paciencia! ¡Nos vemos pronto! 🤖
 `);
 
     return finalMessage;
