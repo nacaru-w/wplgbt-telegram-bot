@@ -63,12 +63,16 @@ function saveStreak(newArticles: boolean) {
     logAction('✅ Streak data was successfully updated!');
 }
 
-async function broadcastMessage(message: string, options: SendMessageOptions) {
+async function broadcastMessage(message: string, options: SendMessageOptions, skipLobbyGroups = false) {
     if (!chatDictionary || chatDictionary.length === 0) {
         logAction('⚠️ No chats registered for broadcast');
         return;
     }
     for (const chat of chatDictionary) {
+        if (skipLobbyGroups && isLobbyGroup(chat.group)) {
+            logAction(`⏭️ Skipping lobby group ${chat.group} for this broadcast`);
+            continue;
+        }
         try {
             await bot.sendMessage(chat.chatId, message, options);
         } catch (error) {
@@ -133,7 +137,7 @@ const scheduleMessages = () => {
             const newStreak = streak;
             const message = announceYesterdaysCreators(yesterdaysArticles, { newStreak, oldStreak });
 
-            await broadcastMessage(message, standardMV2Options);
+            await broadcastMessage(message, standardMV2Options, true);
             logAction("✅ Yesterdays' creators sent");
 
         } catch (error) {
