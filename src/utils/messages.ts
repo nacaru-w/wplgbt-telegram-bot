@@ -297,6 +297,18 @@ export function noEventoDataMessageBuilder(month: Mes, year: string): string {
     );
 }
 
+export const setStreakUsageMessage = adaptToMarkdownV2(
+    `
+Para modificar la racha manualmente, indica el número de días al que quieres ponerla (un entero igual o mayor que 0). Por ejemplo:
+· /modificarracha 7
+`);
+
+export function streakUpdatedMessageBuilder(newStreak: number): string {
+    return adaptToMarkdownV2(
+        `✅ Hecho. La racha se ha fijado en *${newStreak}* día${newStreak === 1 ? '' : 's'}.`
+    );
+}
+
 export function announceYesterdaysCreators(yesterdaysArticles: ArticleObject[], streak?: { oldStreak: number, newStreak: number }): string {
     let list = '';
     for (let article of yesterdaysArticles) {

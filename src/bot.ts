@@ -7,7 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import cron from 'node-cron';
 import { findTopLesbianBiographyContributors, getCurrentEventoDelMesInfo, getEventoDelMesInfoForMonth, getEventoParticipantInfo, getLastEventoDelMesInfo, getYesterdaysPagesAndCreators, rankEditors } from './services/mediawiki-service';
-import { eventoDelMesMessageBuilder, addedMessage, lobbyAddedMessage, newMemberMessageBuilder, lobbyMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder, lastEventoDelMesRankingBuilder, specificEventoDelMesRankingBuilder, eventoRankingUsageMessage, noEventoDataMessageBuilder, announceYesterdaysCreators, lgbtDayMessageBuilder, LGBTDayPhase, errorMessageBuilder } from './utils/messages';
+import { eventoDelMesMessageBuilder, addedMessage, lobbyAddedMessage, newMemberMessageBuilder, lobbyMemberMessageBuilder, startMessage, helpMessage, eventoDelMesRankingMessageBuilder, lastEventoDelMesRankingBuilder, specificEventoDelMesRankingBuilder, eventoRankingUsageMessage, noEventoDataMessageBuilder, announceYesterdaysCreators, lgbtDayMessageBuilder, LGBTDayPhase, errorMessageBuilder, setStreakUsageMessage, streakUpdatedMessageBuilder } from './utils/messages';
 import { getCurrentMonthAndYear, getLastMonthAndYear, isLobbyGroup, logAction, normalizeMonth } from './utils/utils';
 import { Mes } from './types/bot-types';
 
@@ -58,6 +58,17 @@ function saveData(data: { group: string, chatId: number }): void {
 function saveStreak(newArticles: boolean) {
     logAction('⌛ Updating streak data...');
     streak = newArticles ? (streak + 1) : 0;
+    const idData = { groups: chatDictionary, streak };
+    fs.writeFileSync(jsonFilePath, JSON.stringify(idData, null, 2), 'utf-8');
+    logAction('✅ Streak data was successfully updated!');
+}
+
+// Manually overwrite the streak to a specific value. This exists because the streak can drift from
+// reality when someone creates an LGBT+ article but forgets to add it to the list, breaking the
+// automatic count even though the run was never actually interrupted.
+function setStreak(value: number) {
+    logAction(`⌛ Manually setting streak to ${value}...`);
+    streak = value;
     const idData = { groups: chatDictionary, streak };
     fs.writeFileSync(jsonFilePath, JSON.stringify(idData, null, 2), 'utf-8');
     logAction('✅ Streak data was successfully updated!');
@@ -238,6 +249,21 @@ bot.on('message', async (msg) => {
         if (messageText == '/artículosayer' || messageText == '/articulosayer' || messageText == '/articulosayer@wikiproyectolgbtbot' || messageText == '/artículosayer@wikiproyectolgbtbot') {
             const yesterdaysArticles = await (getYesterdaysPagesAndCreators());
             bot.sendMessage(chatId, announceYesterdaysCreators(yesterdaysArticles), standardMV2Options);
+        }
+
+        // Hidden command (intentionally left out of /help) to fix the streak by hand when the
+        // automatic count breaks, e.g. an article was created but not added to the list.
+        if (command == '/modificarracha') {
+            const rawValue = commandArgs[0];
+            if (!/^\d+$/.test(rawValue ?? '')) {
+                bot.sendMessage(chatId, setStreakUsageMessage, standardMV2Options);
+                logAction(`⚠️ Modificar racha: invalid argument "${commandArgs.join(' ')}"`);
+            } else {
+                const newStreak = parseInt(rawValue, 10);
+                setStreak(newStreak);
+                bot.sendMessage(chatId, streakUpdatedMessageBuilder(newStreak), standardMV2Options);
+                logAction(`✅ Streak manually set to ${newStreak}`);
+            }
         }
     } catch (error) {
         // Surface the failure in the chat where the command was issued, with a brief explanation,
