@@ -4,6 +4,7 @@ services:
     restart: unless-stopped
     volumes:
       - bot-data:/usr/src/app/data
+      - ./config.json:/usr/src/app/config.json:ro
     deploy:
       resources:
         limits:
