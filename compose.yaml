@@ -1,6 +1,6 @@
 services:
   lgbt-telegram-bot:
-    build: .
+    image: ghcr.io/nacaru-w/wplgbt-telegram-bot:latest
     restart: unless-stopped
     volumes:
       - bot-data:/usr/src/app/data
