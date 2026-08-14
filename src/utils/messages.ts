@@ -145,7 +145,7 @@ export function eventoDelMesMessageBuilder(info: EventoDelMesInfo, addIntro: boo
     }
     const finalString =
         `
-${addIntro ? '🗓️ ¡Hola a todo el mundo! Paso por aquí para recordaros que ya está en marcha el nuevo *[Evento del Mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes)*.\n' : ''}En este mes de ${info.month?.toLowerCase() || '...uh creo que olvidé el mes...'} celebramos el *${country ? `mes de ${country} ${flag}` : `evento del ${event}`}*:
+${addIntro ? '🗓️ ¡Hola a todo el mundo! Paso por aquí para recordaros que ya está en marcha el nuevo *[Evento del Mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes)*.\n' : ''}En este mes de ${info.month?.toLowerCase() || '...uh creo que olvidé el mes...'} celebramos el *${country ? `mes de ${country} ${flag}` : `evento del ${escapeSymbols(event || '')}`}*:
 · Más información sobre el evento en *[su página en Wikipedia](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${info.month})*.
 · Para ver la lista de artículos sugeridos consulta *[esta página](${country ?
             `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Solicitados/Pa%C3%ADses/${country}` :
