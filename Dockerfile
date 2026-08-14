@@ -1,26 +1,17 @@
-# Use official Node.js image
-FROM node:20-alpine
-
-# Set working directory
+FROM node:24-alpine AS builder
 WORKDIR /usr/src/app
-
-# Create a directory for persistent data
-RUN mkdir -p /usr/src/app/data
-
-# Copy package files
 COPY package*.json tsconfig.json ./
+RUN npm ci
+COPY src ./src
+RUN npm run typecheck && npm run bundle
 
-# Install dependencies (include dev so we can compile TS)
-RUN npm install
+FROM node:24-alpine AS runtime-binary
+RUN apk add --no-cache binutils && strip -s /usr/local/bin/node
 
-# Copy the rest of the project (including config.json)
-COPY . .
-
-# Compile TypeScript to dist/
-RUN npm run compile
-
-# Remove dev deps for smaller final image
-RUN npm prune --production
-
-# Start the bot
-CMD ["npm", "start"]
+FROM alpine:3.23
+RUN apk add --no-cache libstdc++
+COPY --from=runtime-binary /usr/local/bin/node /usr/local/bin/node
+WORKDIR /usr/src/app
+RUN mkdir -p /usr/src/app/data
+COPY --from=builder /usr/src/app/dist/bundle.js /usr/src/app/dist/bundle.js.map ./
+CMD ["node", "--enable-source-maps", "bundle.js"]

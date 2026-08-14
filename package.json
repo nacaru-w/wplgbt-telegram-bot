@@ -6,6 +6,8 @@
   "scripts": {
     "test": "test",
     "compile": "rm -rf dist && tsc",
+    "typecheck": "tsc --noEmit",
+    "bundle": "esbuild src/bot.ts --bundle --platform=node --target=node24 --format=cjs --outfile=dist/bundle.js --sourcemap",
     "start": "node dist/bot.js",
     "bot": "node dist/bot.js",
     "run-background": "npm run bot >> logs.txt 2>&1 &"
@@ -23,6 +25,7 @@
   "devDependencies": {
     "@types/node-cron": "^3.0.11",
     "@types/node-telegram-bot-api": "^0.64.7",
+    "esbuild": "^0.25.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.3"
   },

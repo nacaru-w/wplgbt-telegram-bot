@@ -8,6 +8,9 @@ logs
 # Build artifacts from local runs
 dist
 
+# Runtime config, mounted rather than copied in
+config.json
+
 # OS junk
 .DS_Store
 Thumbs.db
