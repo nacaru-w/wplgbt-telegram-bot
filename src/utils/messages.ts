@@ -125,7 +125,7 @@ export function lgbtDayMessageBuilder(name: string, info: LGBTDayInfo, phase: LG
         : '';
 
     const articleTitle = info.article ?? name;
-    const link = `\n[Más información en su artículo de Wikipedia](https://es.wikipedia.org/wiki/${encodeURIComponent(articleTitle)})`;
+    const link = `\n[Más información en su artículo de Wikipedia](https://es.wikipedia.org/wiki/${adaptLinkToURL(articleTitle)})`;
 
     return `${opening}${nationalNote}${link}`;
 }
@@ -146,10 +146,10 @@ export function eventoDelMesMessageBuilder(info: EventoDelMesInfo, addIntro: boo
     const finalString =
         `
 ${addIntro ? '🗓️ ¡Hola a todo el mundo! Paso por aquí para recordaros que ya está en marcha el nuevo *[Evento del Mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes)*.\n' : ''}En este mes de ${info.month?.toLowerCase() || '...uh creo que olvidé el mes...'} celebramos el *${country ? `mes de ${country} ${flag}` : `evento del ${escapeSymbols(event || '')}`}*:
-· Más información sobre el evento en *[su página en Wikipedia](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${info.month})*.
+· Más información sobre el evento en *[su página en Wikipedia](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${adaptLinkToURL(info.month)})*.
 · Para ver la lista de artículos sugeridos consulta *[esta página](${country ?
-            `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Solicitados/Pa%C3%ADses/${country}` :
-            `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${getCurrentMonthAndYear().month}#Art%C3%ADculos_sugeridos`
+            `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Solicitados/Pa%C3%ADses/${adaptLinkToURL(country)}` :
+            `https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${adaptLinkToURL(getCurrentMonthAndYear().month)}#Art%C3%ADculos_sugeridos`
         })*.
 `
 
@@ -182,7 +182,7 @@ export function eventoDelMesRankingMessageBuilder(
 
     // Build the final string with top lesbian contributor
     let finalString = `
-En este *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${getCurrentMonthAndYear().month}) de${country ? '' : 'l'} ${country ? countryString : escapeSymbols(countryInfo.event || '')}*, la clasificación actual es la siguiente:
+En este *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${getCurrentYear()}/${adaptLinkToURL(getCurrentMonthAndYear().month)}) de${country ? '' : 'l'} ${country ? countryString : escapeSymbols(countryInfo.event || '')}*, la clasificación actual es la siguiente:
 ${rankingString}
 Han participado un total de __${participantCount} personas__. ${participantCount < 3 ? `Eso son pocas personas 😔, ¿por qué no te animas a participar?` : 'Si aún no te has animado a participar, ¡hazlo para aumentar ese número!'}
 En total, se han creado o mejorado __${totalArticles} artículos__.
@@ -270,7 +270,7 @@ export function lastEventoDelMesRankingBuilder(
     countryInfo: EventoDelMesInfo
 ): string {
     const lastMonthObj: { month: Mes, year: string } = getLastMonthAndYear();
-    const leadIn = `En el último *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${lastMonthObj.year}/${lastMonthObj.month}) ${buildEventoDescriptor(countryInfo)}*, la clasificación fue la siguiente:`;
+    const leadIn = `En el último *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${lastMonthObj.year}/${adaptLinkToURL(lastMonthObj.month)}) ${buildEventoDescriptor(countryInfo)}*, la clasificación fue la siguiente:`;
     return buildPastEventoRankingMessage(leadIn, rankedEditors, topLesbianContributorArr);
 }
 
@@ -280,7 +280,7 @@ export function specificEventoDelMesRankingBuilder(
     countryInfo: EventoDelMesInfo,
     monthYear: { month: Mes, year: string }
 ): string {
-    const leadIn = `En el *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${monthYear.year}/${monthYear.month}) ${buildEventoDescriptor(countryInfo)}* de ${monthYear.month.toLowerCase()} de ${monthYear.year}, la clasificación fue la siguiente:`;
+    const leadIn = `En el *[evento del mes](https://es.wikipedia.org/wiki/Wikiproyecto:LGBT/Evento_del_mes/${monthYear.year}/${adaptLinkToURL(monthYear.month)}) ${buildEventoDescriptor(countryInfo)}* de ${monthYear.month.toLowerCase()} de ${monthYear.year}, la clasificación fue la siguiente:`;
     return buildPastEventoRankingMessage(leadIn, rankedEditors, topLesbianContributorArr);
 }
 

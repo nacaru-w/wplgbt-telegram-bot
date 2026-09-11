@@ -86,32 +86,20 @@ export function adaptToMarkdownV2(input: string): string {
 }
 
 
-export function adaptLinkToURL(input: string): string {
+export function adaptLinkToURL(input: string | null | undefined): string {
     if (!input) return ""; // Handle null or undefined input
 
-    // Mapping of problematic characters to their percent-encoded equivalents
-    const replacements: { [key: string]: string } = {
-        "(": "%28",
-        ")": "%29",
-        "[": "%5B",
-        "]": "%5D",
-        "{": "%7B",
-        "}": "%7D",
-        "<": "%3C",
-        ">": "%3E",
-        "#": "%23",
-        "+": "%2B",
-        "%": "%25",
-        "&": "%26",
-        " ": "%20",
-        "!": "%21"
-    };
+    // Wikipedia uses underscores instead of spaces in article URLs
+    const title = input.trim().replace(/ /g, '_');
 
-    // Use a regular expression to replace all problematic characters
-    return input.replace(
-        /[()\[\]{}<>#%+& !]/g,
-        (match) => replacements[match] || match
-    );
+    // Percent-encode everything that is not URL-safe (RFC 3986). encodeURIComponent leaves
+    // !'()* untouched, but ')' would break the Telegram MarkdownV2 link syntax, so encode
+    // those too. Keep ':' and '/' readable, since they are common in Wikipedia titles
+    // (namespaces and subpages) and are valid in a URL path.
+    return encodeURIComponent(title)
+        .replace(/[!'()*]/g, (char) => '%' + char.charCodeAt(0).toString(16).toUpperCase())
+        .replace(/%3A/gi, ':')
+        .replace(/%2F/gi, '/');
 }
 
 export function escapeSymbols(input: string): string {
